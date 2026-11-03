@@ -53,3 +53,11 @@ python scripts/smoke_workflow.py --output-dir /tmp/flare-text-smoke-new --with-e
 
 没有保存公开预训练模型缓存、流权重、检查点及可重新生成的 embedding/X/Y 数组。
 因此仍需获取原始数据与公开模型，并准备计算资源；这不是离线镜像。
+
+## 与LRD独立备份的对应（2026-11-04核对）
+
+LRD现已单独备份到[私有LRD-backup仓库](https://github.com/JoeJingzhou/LRD-backup)。
+之前从FLARE目录分出的`LRD_materials_from_FLARE.tar.gz`也已存入
+[LRD的Release](https://github.com/JoeJingzhou/LRD-backup/releases/tag/backup-2026-11-04)，作为历史参考资料。
+本仓库的FLARE主备份与修复版代码不包含这份LRD补充包；两个研究项目继续分开保存。
+下层旧盘点和交接记录描述的是其封存时状态，本段提供最新对应关系。
