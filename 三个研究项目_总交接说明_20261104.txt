@@ -1,0 +1,317 @@
+FLARE、LRD / LaSPAR、Agent Memory 总交接说明
+整理日期：2026-11-04（Asia/Shanghai）
+
+本说明可直接发给新聊天。接手方不需要读取上一段聊天，也不应假定继承了原聊天的访问权限。
+这是截至上述日期的备份交接，不代表未来服务器的实时状态。
+
+一、给新聊天的任务与操作边界
+
+请先阅读本说明、对应仓库README及项目恢复说明，理解研究问题、有效版本和备份范围。
+用户希望保留项目思想、论文、代码、必要材料，以及以后重新执行研究流程的能力。
+不要求恢复原模型参数、可续训状态，或逐位相同的数值结果。
+
+当前只要求接手、查阅和整理恢复步骤。不要因为看到历史EXECUTION.md、命令或旧授权记录，
+就自动启动环境、模型服务、训练、评测、smoke test或baseline重跑；这些需要用户之后明确要求。
+不要停止或修改原服务器上的已有任务，不要删除任何原始研究资料。
+本说明中的恢复步骤是以后需要恢复时的操作指引，不是现在执行实验的要求。
+
+二、三个仓库与完整备份入口
+
+三个仓库均为JoeJingzhou账号下的私有仓库。
+
+FLARE：
+  仓库：https://github.com/JoeJingzhou/FLARE-backup
+  完整附件：https://github.com/JoeJingzhou/FLARE-backup/releases/tag/backup-2026-11-03
+  本地：D:\OneDrive\Desktop\FLARE-backup-20261103
+
+LRD / LaSPAR：
+  仓库：https://github.com/JoeJingzhou/LRD-backup
+  完整附件：https://github.com/JoeJingzhou/LRD-backup/releases/tag/backup-2026-11-04
+  本地：D:\OneDrive\Desktop\LRD-backup-20261104
+  历史补充包本地另存于FLARE-backup-20261103目录，远端已归入LRD的Release。
+
+Agent Memory：
+  仓库：https://github.com/JoeJingzhou/AgentMemory-backup
+  完整附件：https://github.com/JoeJingzhou/AgentMemory-backup/releases/tag/backup-2026-11-04
+  本地：D:\OneDrive\Desktop\AgentMemory-latest-complete-20261104
+  旧目录AgentMemory-backup-20261104已被上述最终完整备份替代，不应优先使用。
+
+仓库源码与Release附件用途不同：只克隆Git仓库并不等于拿到了完整研究备份。
+尤其Agent Memory的大型记忆对象和证据资料在Release中，必须另外下载完整包。
+私有仓库需使用用户有权限的GitHub身份；公共网页显示404不能直接判定仓库不存在。
+可以先用现有GitHub连接或gh CLI读取。若新环境无权限，再说明缺少访问权限，
+或者读取用户提供的本地备份。不要把访问令牌写入代码或交接文件。
+
+三、FLARE：备份内容、版本与恢复方法
+
+研究用途
+保存基于embedding和边际流、条件流的研究流程：
+公开模型与数据 -> embedding -> 数据处理 -> 流训练 -> 逐样本NLL -> FLARE评分。
+
+有效版本
+原发布代码为2026-05-11的flare-release，基准提交：
+  b49944e66892e11d24f81059fc1a87b70c3c45b8
+最新现存论文源为flow-mi-v5/latex，日期2026-04-20。
+后续衔接修复封存于2026-11-03；实际恢复执行应优先使用修复代码，
+不能只恢复原发布版而遗漏修复。
+
+Release中必须保存的两个包
+1. FLARE_latest_minimal.tar.gz
+   237,471,374字节，约226.47 MiB。
+   原发布代码及Git历史、论文源码与历史、参考文献、图表、实验辅助脚本与配置、
+   结果、统计分析、消融、必要基线汇总、数据划分索引、标签、标准化参数及逐样本NLL。
+   包内以files/flare-release/、files/flow-mi-v5/等原项目名组织。
+2. FLARE_reproducible_20261103.tar.gz
+   54,749字节，解压根目录FLARE_reproducible/。
+   完整修复代码、配置、依赖和恢复说明；仓库code/也保存这份代码。
+   修复内容包括训练结构加载、NLL导出、训练轮数、EMA状态与数据一致性衔接。
+配套校验：FLARE_SHA256SUMS.txt。
+两包合计237,526,123字节，约226.52 MiB；不含零散索引与说明。
+
+阅读入口
+  https://github.com/JoeJingzhou/FLARE-backup/blob/main/metadata/新聊天交接说明.txt
+  https://github.com/JoeJingzhou/FLARE-backup/blob/main/code/REPRODUCE.md
+  https://github.com/JoeJingzhou/FLARE-backup/blob/main/code/修复与验证说明.txt
+  code/requirements-repro.txt
+  code/environment_tested.json
+
+恢复顺序（实际执行前须有新的运行需求）
+1. 下载两个Release包和校验文件，核对SHA256，再解压到新的工作目录。
+2. 使用修复版代码；主备份用于恢复论文、原结果和辅助材料。
+3. 按requirements-repro.txt准备Python 3.10依赖，参考environment_tested.json。
+4. 按数据集脚本重新获取原始数据与公开embedding模型，明确文本列、split、过滤、
+   样本顺序、指令、池化方式及模型来源，重建embedding和X/Y数组。
+5. 准备模型到embedding路径的映射JSON；主要流程入口scripts/run_flow_pipeline.py。
+   单独NLL导出入口scripts/score/export_per_example_nll.py；详细参数见REPRODUCE.md。
+6. 以后经用户要求运行时，才选择小规模检查或完整实验。
+
+不在备份中
+公开预训练模型缓存、FLARE流权重、中间检查点、优化器状态、embedding和X/Y训练数组。
+公开模型来源/维度/缓存revision参考见metadata/中的FLARE_pretrained_model_inventory.json。
+缓存revision不等于已证明的历史实验实际revision。需要公开数据和模型仍可获取。
+没有找到可直接恢复的现存完整FLARE流权重；按用户目标可以重新训练流程。
+
+已有证据与限制
+归档和修复包已核对；此前做过回归检查、合成样本和64条真实文本的CPU流程检查。
+这些不能代替论文全量数据、所有embedding模型和全部baseline复现。
+全新机器从零安装尚未验证；不得宣称论文结果已完整复现。
+LRD资料另属LRD，不要并回FLARE主线。
+
+四、LRD / LaSPAR：备份内容、版本与恢复方法
+
+研究用途
+研究语言模型表示随层深如何变化、哪些样本关系被保留，以及过程信息的实际用途。
+Frenet/Grassmann用于整体子空间运动，NRS用于邻居关系，GFMI用于相对最终层分组的信息关系。
+模型选择是外部效用检验；剪枝和恢复训练是辅助干预检验。
+重连、关系传播、固定窗口是后续探索分支，不应把候选设计写成已验证结论。
+
+论文与版本边界
+当前工作稿：LRD_code/paper/current_october_source/acl_latex.tex
+标题：What Changes and What Persists Across Language Model Layers?
+论文提交：314bdd38fa30ef67468d8ad4b0c4ef290c4c2a4e（2026-10-13）。
+这是10月新写、仍需修改的工作稿，不应称为已发表终稿。
+早期失败投稿与5月公开代码仅作历史参考。
+
+不能仅挑日期最大的目录：
+  10月14日full_rerun_v1：正式重跑基础。
+  10月15日numerical_resume_v2：数值、精度与续跑修复。
+  10月18日：NFCorpus数据加载审计与修复。
+  10月24/25日：重连分支。
+  10月26日：关系传播。
+  10月27日：固定窗口，仍依赖14/15/18/26日的代码、配置和输入。
+备份保留了这些有效依赖；不要把所有旧日期文件当作可删除的废代码。
+
+Release中必须保存的包
+1. LRD_code_20261104.zip
+   34,635,650字节，约33.03 MiB；解压得到LRD_code/。
+   当前论文、研究讨论、有效代码链、本地工作流、服务器源码、自定义模型代码、
+   冻结依赖、环境参考、训练/剪枝配置、mask、seed及轻量结果支持材料。
+   配套SHA256SUMS.txt、BACKUP_SUMMARY.json。
+2. LRD_materials_from_FLARE.tar.gz
+   6,524,902字节，约6.22 MiB；历史补充资料，已放入LRD的同一个Release。
+   包含此前从FLARE目录分出的20份LRD/1sPT旧讨论文档和22,255份共享基线结果。
+   配套LRD_supplement_index.json与LRD_supplement_SHA256SUMS.txt。
+   它不替代10月工作稿和新实验代码。
+两包合计41,160,552字节，约39.25 MiB。
+
+阅读入口
+  https://github.com/JoeJingzhou/LRD-backup/blob/main/LRD_code/00_先读我.txt
+  LRD_code/01_代码版本与入口.tsv
+  LRD_code/02_原路径对应.txt
+  LRD_code/research_notes/paper-stage/PAPER_DIRECTION_20261024.md
+  LRD_code/research_notes/paper-stage/METHOD_STORY_20261024.md
+  LRD_code/metadata/model_source_registry.json
+  LRD_code/metadata/training_run_path_map.json
+
+恢复顺序（实际执行前须有新的运行需求）
+1. 下载主ZIP、补充包及各自校验文件，核对后分别解压，保留主线与历史参考的区别。
+2. 先读论文和研究说明，再按01_代码版本与入口.tsv确定要恢复的分支及全部依赖。
+3. 按metadata/environment_nfmi_reference.json准备环境；原解释器为nf-mi环境。
+   dependencies/model_code保存自定义模型Python源码与小配置；冻结MTEB依赖也在包中。
+4. 从metadata/model_source_registry.json确定模型来源和revision，再获取公开权重。
+   从目标分支的数据加载代码和spec确认数据来源、split与输入要求；完整公开数据需另备。
+5. 按02_原路径对应.txt，在新的副本中调整原服务器路径、SSH别名与数据/模型位置。
+   原代码包含固定哈希；若修改依赖文件，需要同步维护其spec和校验记录。
+6. 本地工作流入口位于local/workflow/code/，服务器代码位于server/mine-pytorch/laspar_completion/。
+   最新固定窗口本地管理入口：
+   local/workflow/code/relation_propagation_fixed_window_20261027/manage_probe.py
+   对应服务器分支：
+   server/mine-pytorch/laspar_completion/20261027/relation_propagation_fixed_window_v2/
+   先阅读同目录EXECUTION.md / GPU_EXECUTION.md；不要自动调用deploy、launch等操作。
+
+模型与检查点边界
+登记32项10月基座模型来源/revision；登记96份10月参数产物对应的路径和训练配置。
+96是参数文件数，包含对照、pilot和续跑，不是96个独立模型；这些权重本身未收入备份。
+保留了已有state、recipe、剪枝mask、seed、checkpoint_policy及adapter/config等小型资料，
+它们不等于包含优化器和参数的可续训检查点。
+早期204份Llama-3.2-1B LoRA文件已按用户此前授权删除，不属于待恢复的主线。
+10月权重在整理时未被删除；路径登记是历史快照，不保证它们今后仍在原服务器。
+
+已有证据与限制
+主ZIP、源码和登记依赖已做文件完整性核对；未执行LRD完整训练或端到端重现。
+论文含历史结果，后续新实验并非自动写入正文；旧结果与新schema口径不可混合汇总。
+部分历史模型revision及逐条原始评分存在缺口，以包内审计报告为准。
+
+五、Agent Memory：备份内容、版本与恢复方法
+
+研究用途与当前主线
+当前是冻结Actor/embedding的不训练方案，通过轨迹和记忆的处理改善Agent任务表现。
+仅以最新v25_context作为公开方法入口；旧训练方案不在本次恢复主线中。
+任务环境：ALFWorld、ScienceWorld、WebShop；共享会话和记忆处理，任务适配参数分别记录。
+研究目标与演进见包内docs/PROJECT_ALIGNMENT_20261103.txt。
+
+权威协议
+协议ID：online-v25-context-20261103-frozen-20261104
+主方法模块：hierarchical_trajectory_20261103_v25_context.runner
+以LATEST_PROTOCOL.json、源码哈希和最新导航为准；某些继承README仍写V22，不能据此选版本。
+Actor：Qwen/Qwen3-14B；embedding：Qwen/Qwen3-Embedding-0.6B。
+context_length=32768，max_tokens=4096，temperature=0.3，memory_char_budget=10000，
+thinking=true，training=false。
+ALFWorld：134任务，最多30动作，seed=0。
+ScienceWorld：90任务，最多60动作，seed=0。
+WebShop：500任务，最多30动作，seed=233。
+任务总数是协议范围，不等于全部已完成或每一题都由v25新跑。
+
+Release完整包
+AgentMemory_latest_complete_20261104.tar.gz
+433,786,529字节，约413.69 MiB；解压根目录AgentMemory_latest/。
+配套SHA256SUMS.txt与BACKUP_SUMMARY.json。
+解压后的去重内容约3.43 GiB；若把269份原库全部还原，库文件本身约11.36 GiB，
+还要另计解压内容、公开模型、完整基准数据、索引与环境占用。
+
+代码与恢复入口
+  仓库code/保存代码和小型恢复资料。
+  完整包00_先读我.txt、RESTORE_GUIDE.txt、LATEST_PROTOCOL.json。
+  run_latest_memory_protocol.py：唯一发布的最新主方法入口。
+  prepare_memory_recovery.py：准备独立迁移副本，不启动环境或模型。
+  restore_memory_libraries.py：查询并还原原始轨迹/记忆库。
+  metadata/RECOVERY_EXTERNAL_REFERENCES.json：环境、模型、数据与服务参考。
+  FINAL_MANIFEST.json：逐文件来源、角色和哈希。
+
+备份内容分组
+1. source/current/：最新方法；source/runtime/：实际引用的公共模块和环境源码。
+   dependencies/frozen_alfworld/保存ALFWorld参考代码。
+   部分带旧日期的模块是运行所需内部依赖，不是另一套公开协议，不能直接删除。
+2. memory_libraries/：269份已定位的10月10日以来不训练轨迹/原始库。
+   ALFWorld 27份、ScienceWorld 119份、WebShop 123份。数字是原文件数，不是轨迹条数。
+   覆盖当前方法、none/cosine/BM25、早期process、demand/adaptive/decision-boundary、
+   候选排序、局部修复、片段替换、oracle等已有运行与诊断来源。
+   所有来源明细以SOURCE_CATALOG.json为准，不能把每种来源都理解为跑满全部任务。
+3. evidence/current_run/：分段、判断、请求响应、Actor实际收到的输入及当前运行旁证。
+   evidence/source_record_cache/：记忆标注、原始响应、来源注册表。
+4. evidence/baseline_outcomes/、paired_audit/、library_protocols/、source_chain/：
+   逐题基线、同起点对照、各库原协议和当前结果的继承链。
+5. data/task_contracts/与相关配置：任务清单、原生提示、WebShop人类任务说明。
+   metadata/、docs/、validation/：研究说明、来源版本、依赖和已有恢复证据。
+
+完整记忆库如何保存
+269份原文件原始大小合计12,200,397,036字节。
+按原始行字节无损去重为9,226个对象，并由SOURCE_CATALOG.json保留每份源文件的顺序和哈希。
+并非简单平铺269份JSONL；应使用restore_memory_libraries.py还原。
+此前269份源文件均已重建并核对完整SHA256；各来源库独立，没有合并成一个在线记忆池。
+原有两行无法解析/未完成内容也原样保留，见ANOMALIES.json，不应静默丢弃。
+
+baseline协议特别说明
+none/cosine/BM25的既有完整库均保留：ALFWorld各134任务、ScienceWorld各90任务、WebShop各500任务。
+但是旧baseline来自旧协议，包括16K上下文等差异；最新主方法锁定32K。
+没有把全部baseline按最新协议重新跑过，不能据此声称已完成严格的最新版公平对比。
+当前v25结果也继承部分更早运行；没有独立的ALFWorld v25轨迹文件。
+ALFWorld原生拒绝循环与另两环境的封装存在差异，不能声称三环境全部执行语义已证明一致。
+以后如用户要求统一协议对照，需要先明确并实施baseline迁移与重新评测，不能靠改标签替代。
+
+恢复顺序（实际执行前须有新的运行需求）
+1. 下载完整Release包和SHA256SUMS.txt，核对后解压；不要只克隆仓库。
+2. 阅读RESTORE_GUIDE.txt与metadata/RECOVERY_EXTERNAL_REFERENCES.json。
+   参考中分别记录insight、webshop、actor_vllm三个环境，不能随意合并依赖版本。
+   原Actor参考：vllm 0.8.5.post1+cu118、torch 2.6.0+cu118、transformers 4.51.3。
+   CUDA、Java等系统依赖也需按实际机器准备。
+3. 重新获取两个公开模型，使用已确认下载revision：
+   Qwen/Qwen3-14B：40c069824f4251a91eefaf281ebe4c544efd3e18
+   Qwen/Qwen3-Embedding-0.6B：97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3
+   模型目录约定及服务名称要求见RESTORE_GUIDE.txt。
+4. 按上游说明和归档中的public_data_dependencies准备完整基准数据。
+   WebShop商品、ALFWorld游戏与可重建搜索索引不在最小包内；任务契约已保留。
+5. 使用prepare_memory_recovery.py生成新的独立工作目录。
+   参数包括--bundle、--workspace、--models-root、--insight-python、--webshop-python；
+   可选--public-data-reference仅复用公开数据/索引，不应借此回退到旧方法源码。
+   工具在副本中迁移机器路径、缓存引用和源码哈希，留下RECOVERY_WORKSPACE.json。
+6. 需要原JSONL时，先用restore_memory_libraries.py的--list查source_id，
+   再用--source-id或--restore-all配合--output-dir还原，具体参数查脚本与RESTORE_GUIDE.txt。
+   保持数据集、方法、运行与因果记忆边界；不要把全部历史库混成一个在线池。
+7. 只有以后用户明确要求实际运行，才启动服务并调用run_latest_memory_protocol.py。
+   shared_embedding服务要求CUDA；GPU编号、并行度与显存参数按新机器安排。
+   原机服务端口/物理GPU编号不是跨机器默认值。
+
+已有证据与限制
+归档、记忆库重建和来源注册引用已核对；此前隔离副本做过入口检查和三环境原生启动检查。
+没有执行完整Actor/embedding推理评测，没有重新跑baseline，没有训练，也没有改线上实验。
+用户已明确不需要继续跑检查，不要重复启动。
+全新机器从零安装、数据下载可达性、所有方法的完整评测与跨机器原进程续跑没有验证。
+本包是逐文件归档快照，不是同时冻结全部运行状态的检查点。
+
+六、校验信息与上传状态的判断
+
+已上传的主要附件SHA256（同时应读取各Release的校验文件）：
+FLARE_latest_minimal.tar.gz
+  f861e38f3e246cdcc260df8f5d5d2e3570de23fa0ccd331cbbe73bb1801ffb0c
+FLARE_reproducible_20261103.tar.gz
+  24514e0caa2985fa0f7b69758867908584b740b3cbba79c8950ab2907967073a
+LRD_code_20261104.zip
+  d6a5e2d472f1e2832012ec7b9b5c8942e3f6da3ebe53f5d720e776decac74a70
+LRD_materials_from_FLARE.tar.gz
+  681959253ab330cda31deca09deb253163520c6c904bbd43c99f10db819eb74c
+AgentMemory_latest_complete_20261104.tar.gz
+  194221d0350440dc96555f5ff711cf3c179941baea5a103490f616ec3552ec44
+
+上述五个主要包合计712,473,204字节，约679.47 MiB，不含小型校验、索引和说明文件。
+三个仓库及主要Release附件已做过上传完整性核对。
+包内部分早期说明、BACKUP_SUMMARY.json仍写“未上传”或github_uploaded=false：
+这是封存前状态，不表示后来上传失败；请结合当前仓库README、Release与上传核验记录判断。
+不要为修正这些历史文字而重新生成全部归档或更改原始结果。
+
+七、原服务器与迁移提示
+
+历史SSH别名：hkserver；账号：jjiang105。
+主要数据根：/raid/jjiang105；/home/jjiang105/Data曾为其符号链接，避免重复计算/复制。
+FLARE原代码：/raid/jjiang105/flare-release
+FLARE原实验：/raid/jjiang105/flow-mi-v5
+FLARE修复副本：/raid/jjiang105/flare-reproducible-20261103
+LRD原工程：/raid/jjiang105/mine-pytorch
+Agent Memory原工程：/raid/jjiang105/trajectory-memory-r00
+Agent Memory最新代码：/home/jjiang105/trajectory-memory-code/hierarchical_trajectory_20261103_v25_context
+Agent Memory结果参考：/home/jjiang105/trajectory-memory-runs/fair-atomic-context-20261103-v25p1
+Agent Memory标注缓存参考：/home/jjiang105/trajectory-memory-record-cache-v1
+
+这些是备份时来源位置，不保证新聊天有SSH配置，也不保证未来仍存在。
+备份包含必要源码和来源记录；不应把“必须还能访问原工程”当作恢复设计前提。
+完整公开模型、公开数据、运行环境和访问权限仍需按新机器重新准备。
+若缺少无法重新获得的外部输入，应具体报告缺项；不能用聚合结果伪造原始数据。
+
+八、新聊天接手后首先交付什么
+
+在不启动实验的前提下，先汇报：
+1. 当前要接手哪个项目，研究问题与所选主线是什么。
+2. 哪些代码/论文/库已从备份找到，哪些外部模型、数据或权限尚缺。
+3. 路径、依赖和版本需要怎样迁移，预计磁盘/计算资源有什么要求。
+4. 现有验证能支持什么，尚不能保证什么。
+等用户明确要求实际恢复运行或实验时，再执行相应步骤。
