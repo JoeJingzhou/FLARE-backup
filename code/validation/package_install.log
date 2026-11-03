@@ -1,0 +1,16 @@
+Obtaining file:///raid/jjiang105/flare-reproducible-20261103
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: flare-embedding-eval
+  Building editable for flare-embedding-eval (pyproject.toml): started
+  Building editable for flare-embedding-eval (pyproject.toml): finished with status 'done'
+  Created wheel for flare-embedding-eval: filename=flare_embedding_eval-0.1.0-0.editable-py3-none-any.whl size=5409 sha256=d078ff607c997d3081f051fa995777f95e3aa0c2b2c7ee3e0d2ddb63db35e3a0
+  Stored in directory: /tmp/pip-ephem-wheel-cache-dv0qe0n5/wheels/26/32/2a/3fc84b3ff92ddffbf2a07f0772586e743c7a491a107ad8be8d
+Successfully built flare-embedding-eval
+Installing collected packages: flare-embedding-eval
+Successfully installed flare-embedding-eval-0.1.0
+
+[notice] A new release of pip is available: 23.0.1 -> 26.3
+[notice] To update, run: /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python -m pip install --upgrade pip

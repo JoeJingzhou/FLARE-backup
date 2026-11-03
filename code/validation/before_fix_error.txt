@@ -1,0 +1,28 @@
+[device] cpu
+[data] train x=(24, 8), y=(24, 8) | val x=(8, 8), y=(8, 8)
+
+Traceback (most recent call last):
+  File "/raid/jjiang105/flare-release/scripts/train/train_conditional.py", line 551, in <module>
+    main()
+  File "/raid/jjiang105/flare-release/scripts/train/train_conditional.py", line 498, in main
+    marginal = MarginalFlow(
+  File "/raid/jjiang105/flare-release/flare/flows/marginal.py", line 7, in __init__
+    self.flow = build_nsf(y_dim, hidden, layers, bins, use_actnorm, use_inv1x1)
+  File "/raid/jjiang105/flare-release/flare/flows/layers.py", line 134, in build_nsf
+    PiecewiseRationalQuadraticCouplingTransform(
+  File "/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py", line 457, in __init__
+    super().__init__(
+  File "/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py", line 51, in __init__
+    self.transform_net = transform_net_create_fn(
+  File "/raid/jjiang105/flare-release/flare/flows/layers.py", line 131, in <lambda>
+    return lambda in_f, out_f: net_factory(in_f, out_f)
+  File "/raid/jjiang105/flare-release/flare/flows/layers.py", line 117, in net_factory
+    return ScaledMLP(
+  File "/raid/jjiang105/flare-release/flare/flows/layers.py", line 24, in __init__
+    layers.append(nn.Linear(dim_prev, h))
+  File "/home/jjiang105/anaconda3/envs/memsearcher-smoke/lib/python3.10/site-packages/torch/nn/modules/linear.py", line 106, in __init__
+    torch.empty((out_features, in_features), **factory_kwargs)
+TypeError: empty() received an invalid combination of arguments - got (tuple, dtype=NoneType, device=NoneType), but expected one of:
+ * (tuple of ints size, *, tuple of names names, torch.memory_format memory_format = None, torch.dtype dtype = None, torch.layout layout = None, torch.device device = None, bool pin_memory = False, bool requires_grad = False)
+ * (tuple of ints size, *, torch.memory_format memory_format = None, Tensor out = None, torch.dtype dtype = None, torch.layout layout = None, torch.device device = None, bool pin_memory = False, bool requires_grad = False)
+

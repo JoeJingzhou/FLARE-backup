@@ -1,0 +1,11 @@
+{
+  "archive": "FLARE_reproducible_20261103.tar.gz",
+  "bytes": 54749,
+  "sha256": "24514e0caa2985fa0f7b69758867908584b740b3cbba79c8950ab2907967073a",
+  "file_count": 60,
+  "tested_source_files_compared": 40,
+  "archive_content_verification": "passed",
+  "model_weights_included": false,
+  "local_extraction_files_verified": 60,
+  "local_extraction_verification": "passed"
+}

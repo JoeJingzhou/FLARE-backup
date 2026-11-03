@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "embedding_generation": false,
+  "models": "synthetic arrays",
+  "pairs": 2,
+  "sample_count": 64,
+  "held_out_samples": 13,
+  "mismatch_rejected": true,
+  "cuda_visible_devices": ""
+}

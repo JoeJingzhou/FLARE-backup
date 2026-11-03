@@ -1,0 +1,61 @@
+FLARE 新聊天交接说明（2026-11-03）
+
+用户的备份目标
+保留重新执行 FLARE 研究流程的能力：获取数据/公开 embedding 模型 -> 生成向量 -> 数据处理 -> 训练边际流和条件流 -> 导出逐样本 NLL -> 计算最终 FLARE 分数。
+不要求恢复原始参数、原训练检查点、断点续训状态或逐位一致的论文结果。
+
+本地备份目录
+D:\OneDrive\Desktop\FLARE-backup-20261103
+GitHub 备份仓库：https://github.com/JoeJingzhou/FLARE-backup；压缩包见 Release backup-2026-11-03。
+
+核心备份
+1. FLARE_latest_minimal.tar.gz（237,471,374 字节）
+包含 2026-05-11 的 flare-release 代码和 Git 历史；最新现存论文源码、参考文献、图表；原实验辅助脚本、配置、结果、统计分析、消融和必要基线汇总；数据划分索引、标签、标准化参数与逐样本 NLL。
+最新论文来源为 flow-mi-v5/latex，2026-04-20；发布代码基准提交 b49944e66892e11d24f81059fc1a87b70c3c45b8。
+包内 files/ 按原顶层项目名组织，例如 files/flare-release/、files/flow-mi-v5/，不是完整服务器绝对路径。
+逐文件来源、日期、大小和 SHA-256 可查 FLARE_latest_minimal.manifest.json。
+
+2. FLARE_reproducible_20261103.tar.gz（54,749 字节）
+这是应优先使用的修复版完整源码；解压根目录为 FLARE_reproducible/。
+本地同时有可直接阅读的 FLARE_reproducible 文件夹。
+修复了训练结构加载、NLL 导出衔接、训练轮数配置、EMA 非参数状态与数据一致性检查。
+阅读顺序：修复与验证说明.txt -> REPRODUCE.md -> README.md。
+主要入口：scripts/run_flow_pipeline.py。
+手动 NLL 导出：scripts/score/export_per_example_nll.py。
+依赖：requirements-repro.txt；实际测试环境信息：environment_tested.json。
+基于原发布版的差异也另存为 FLARE_workflow_repair.patch；已通过 git apply --check。
+
+3. LRD_materials_from_FLARE.tar.gz（6,524,902 字节）
+单独保存从 FLARE 相关目录中分出的 LRD/1sPT 文档及后续共享基线结果。
+这不是完整 LRD 项目备份。LRD 主目录 mine-pytorch 等仍在服务器，本轮没有完整打包。
+
+已验证的范围
+- 原 FLARE 与 LRD 两个压缩包已完整解压并逐文件 SHA-256 核对。
+- 修复包的 60 个来源文件已逐文件验证；40 个源码/配置/依赖文件与服务器实际测试版本比对一致。
+- 五项回归检查通过。
+- 64 个合成样本的完整训练、NLL 导出和评分通过。
+- 64 条真实文本，用 MiniLM mean/CLS 两种池化生成向量后，两个方向的完整训练、测试 NLL 导出和评分通过；每方向 13 个测试样本。
+- 数据顺序错误拒绝检查、MI bounds 入口、editable 安装和 pip check 通过。
+- 全程隐藏 GPU，仅用 CPU；未重跑论文全量数据、全部八个 embedding 模型或全部基线。
+- Python 3.10 测试环境继承现有环境依赖，未验证全新机器上的完整依赖安装。
+证据见 FLARE_reproducible/validation/ 与包外 verification 文件。
+
+没有备份的内容
+公开预训练模型缓存、FLARE 流权重、中间检查点、优化器状态、embedding 和 X/Y 训练数组。
+这些按用户要求重新下载或重新生成。当前备份不是离线镜像；以后仍需能获取公开模型和原始数据，或找到等价来源。
+模型 ID、维度与现存缓存 revision 参考见 FLARE_pretrained_model_inventory.json；不能将缓存 revision 认定为历史实验实际 revision。
+现存完整 FLARE 流权重未找到。此事不妨碍重新训练流程，但原参数无法直接恢复。
+
+服务器参考
+SSH 配置别名：hkserver；账号：jjiang105。
+修复测试副本：/raid/jjiang105/flare-reproducible-20261103。
+原发布代码：/raid/jjiang105/flare-release；原实验：/raid/jjiang105/flow-mi-v5。
+/home/jjiang105/Data 是 /raid/jjiang105 的链接，勿当成两份独立数据。
+修复未覆盖原发布目录。服务器上另有其他项目的运行任务，重建流程前应先核对资源状态。
+新聊天可能未配置同样的 SSH 访问；本地备份仍可独立阅读和迁移。
+
+接手方式
+先读此说明和修复版 REPRODUCE.md，明确用户当前要的是查阅、修改、恢复还是实际重新实验。
+实际恢复时优先解压修复版，在 Python 3.10 环境验证小规模流程，再按具体数据集脚本确定来源、文本列、split、过滤、样本顺序、指令、池化和模型版本，生成向量。
+为各模型准备 embedding 路径映射 JSON，再使用 run_flow_pipeline.py 完成训练与评分。
+完整论文数值尚未复验，不应把小规模测试分数作为论文结果。

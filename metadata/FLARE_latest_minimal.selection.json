@@ -1,0 +1,127 @@
+{
+  "packages": {
+    "flare": {
+      "files": 20513,
+      "bytes": 468551386,
+      "groups": {
+        "latest_release_20260511": {
+          "files": 120,
+          "bytes": 223142
+        },
+        "summary_tables_and_support_scripts": {
+          "files": 150,
+          "bytes": 593044
+        },
+        "generated_figures": {
+          "files": 46,
+          "bytes": 3448669
+        },
+        "rebuild_metadata_and_per_example_results": {
+          "files": 5598,
+          "bytes": 292919329
+        },
+        "latest_paper_20260420": {
+          "files": 17,
+          "bytes": 1144172
+        },
+        "experiment_results": {
+          "files": 965,
+          "bytes": 101113890
+        },
+        "experiment_support_source": {
+          "files": 192,
+          "bytes": 1791863
+        },
+        "theory_and_experiment_notes": {
+          "files": 32,
+          "bytes": 491645
+        },
+        "paper_git_history": {
+          "files": 514,
+          "bytes": 6348147
+        },
+        "baseline_support_source": {
+          "files": 65,
+          "bytes": 661713
+        },
+        "baseline_summary_results": {
+          "files": 8226,
+          "bytes": 45230224
+        },
+        "baseline_and_downstream_summary_results": {
+          "files": 4569,
+          "bytes": 14421393
+        },
+        "baseline_summary_and_provenance": {
+          "files": 4,
+          "bytes": 86537
+        },
+        "modified_baseline_support_source": {
+          "files": 15,
+          "bytes": 77618
+        }
+      }
+    },
+    "lrd": {
+      "files": 22275,
+      "bytes": 37485335,
+      "groups": {
+        "mixed_lrd_documents": {
+          "files": 20,
+          "bytes": 176612
+        },
+        "post_release_shared_baseline_results": {
+          "files": 22255,
+          "bytes": 37308723
+        }
+      }
+    }
+  },
+  "excluded": {
+    "old_snapshot_reference_or_operational_log": {
+      "files": 92,
+      "bytes": 190958905
+    },
+    "regenerable_arrays": {
+      "files": 1607,
+      "bytes": 155959322752
+    },
+    "duplicate_archive_or_log": {
+      "files": 2,
+      "bytes": 30114784
+    },
+    "cache": {
+      "files": 98,
+      "bytes": 461062
+    },
+    "old_training_logs": {
+      "files": 951,
+      "bytes": 238386366
+    },
+    "older_baseline_duplicate_or_history": {
+      "files": 3035,
+      "bytes": 978742546
+    },
+    "old_baseline_history_or_cache": {
+      "files": 35932,
+      "bytes": 994853640
+    },
+    "weights_or_binary_history": {
+      "files": 6219,
+      "bytes": 26984977714
+    },
+    "regenerable_arrays_or_cache": {
+      "files": 12,
+      "bytes": 971560
+    },
+    "old_neural_baseline_predictions_or_history": {
+      "files": 2857,
+      "bytes": 812235757
+    }
+  },
+  "git": {
+    "flare-release": "b49944e66892e11d24f81059fc1a87b70c3c45b8\n2026-05-11T08:36:55+08:00\n2026-05-11T08:36:55+08:00\nRemove exclusion note from README",
+    "flow-mi-v5": "5488bea920ff4a674f9baffebaa86960a4674329\n2026-04-18T18:01:18+00:00\n2026-04-18T18:04:48+00:00\nUpdate on Overleaf.",
+    "emir": "e8d23d07d1cc5c7edf2777f4f1dd7433c14cf324\n2024-11-11T13:42:58-05:00\n2024-11-11T13:42:58-05:00\n[wrap] Wrapper for embedder evaluation"
+  }
+}

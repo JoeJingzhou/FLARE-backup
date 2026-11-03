@@ -1,0 +1,4 @@
+模型补充核对：226.47 MiB 的 FLARE 精简包未包含模型权重。
+FLARE_pretrained_model_inventory.json 保存 8 个代码内预训练模型 ID 的当前本地缓存路径、refs、snapshot revision、权重大小和缓存文件日期。7 个模型在默认缓存位置存在，stella-base-en-v2 在该位置未找到；缓存 revision 不等于已证实的历史实验 revision。
+FLARE_trained_weight_search.json 记录在本人 home 和 raid 工作目录按 flow 常见权重文件名检索的范围及结果：未找到现存匹配文件。缓存、环境和模型目录已剪枝，不能视为所有位置和任意文件名的穷尽搜索。
+hybird-mi 内约 22.98 GiB 的基线训练检查点仍在服务器上，未打入精简包。

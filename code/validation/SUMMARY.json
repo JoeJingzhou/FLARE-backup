@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-03",
+  "base_commit": "b49944e66892e11d24f81059fc1a87b70c3c45b8",
+  "regression_tests": 5,
+  "synthetic_workflow_passed": true,
+  "final_text_workflow_passed": true,
+  "text_count": 64,
+  "encoder": "MiniLM mean and CLS variants",
+  "directed_pairs": 2,
+  "test_rows_per_pair": 13,
+  "target_mismatch_rejected": true,
+  "mi_bounds_passed": true,
+  "editable_install_passed": true,
+  "pip_check_passed": true,
+  "gpu_used": false,
+  "full_benchmark_reproduced": false,
+  "clean_dependency_install_tested": false
+}

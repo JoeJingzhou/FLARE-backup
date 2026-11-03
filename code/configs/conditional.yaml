@@ -1,0 +1,18 @@
+model: CondNSF
+# Backbone layers, width, bins and normalization come from the marginal checkpoint.
+dropout: 0.0
+adapter_rank: 64
+adapter_scale: 0.002
+base_lr: 0.012
+min_adapter_lr: 0.004
+weight_decay: 1e-5
+batch_size: 8
+seed: 42
+stage_epochs: [60, 60, 220]
+max_epochs: 340
+use_amp: false
+grad_accum_steps: 8
+eval_bs: 8192
+val_subset_ratio: 0.1
+val_subset_min: 1024
+val_full_every: 10

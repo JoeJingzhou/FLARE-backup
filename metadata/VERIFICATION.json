@@ -1,0 +1,18 @@
+[
+  {
+    "Package": "FLARE_latest_minimal",
+    "Files": 20513,
+    "SourceBytes": 468551386,
+    "ArchiveBytes": 237471374,
+    "SHA256": "f861e38f3e246cdcc260df8f5d5d2e3570de23fa0ccd331cbbe73bb1801ffb0c",
+    "Verified": true
+  },
+  {
+    "Package": "LRD_materials_from_FLARE",
+    "Files": 22275,
+    "SourceBytes": 37485335,
+    "ArchiveBytes": 6524902,
+    "SHA256": "681959253ab330cda31deca09deb253163520c6c904bbd43c99f10db819eb74c",
+    "Verified": true
+  }
+]

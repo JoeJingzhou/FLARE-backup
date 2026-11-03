@@ -1,0 +1,303 @@
+[
+  {
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "cache_path": "/home/jjiang105/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2",
+    "exists": true,
+    "snapshots": [
+      {
+        "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+        "weight_bytes": 90868376,
+        "weights": [
+          {
+            "file": "model.safetensors",
+            "bytes": 90868376
+          }
+        ],
+        "metadata_bytes": 710039,
+        "missing_links": [],
+        "latest_file_date": "2026-06-23T03:34:54.087916+08:00"
+      },
+      {
+        "revision": "c9745ed1d9f207416be6d2e6f8de32d1f16199bf",
+        "weight_bytes": 90868376,
+        "weights": [
+          {
+            "file": "model.safetensors",
+            "bytes": 90868376
+          }
+        ],
+        "metadata_bytes": 709991,
+        "missing_links": [],
+        "latest_file_date": "2026-05-19T07:15:20.874676+08:00"
+      }
+    ],
+    "disk_bytes": 91684864,
+    "refs": {
+      "main": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+    }
+  },
+  {
+    "model": "infgrad/stella-base-en-v2",
+    "cache_path": "/home/jjiang105/.cache/huggingface/hub/models--infgrad--stella-base-en-v2",
+    "exists": false,
+    "snapshots": []
+  },
+  {
+    "model": "BAAI/bge-multilingual-gemma2",
+    "cache_path": "/home/jjiang105/.cache/huggingface/hub/models--BAAI--bge-multilingual-gemma2",
+    "exists": true,
+    "snapshots": [
+      {
+        "revision": "8365500e19bc804136f4ad12c2494430239a2d72",
+        "weight_bytes": 36966903920,
+        "weights": [
+          {
+            "file": "model-00003-of-00004.safetensors",
+            "bytes": 9924426248
+          },
+          {
+            "file": "model-00001-of-00004.safetensors",
+            "bytes": 9806722072
+          },
+          {
+            "file": "model-00004-of-00004.safetensors",
+            "bytes": 7340631384
+          },
+          {
+            "file": "model-00002-of-00004.safetensors",
+            "bytes": 9895124216
+          }
+        ],
+        "metadata_bytes": 21852044,
+        "missing_links": [],
+        "latest_file_date": "2026-04-23T16:02:45.891636+08:00"
+      },
+      {
+        "revision": "992e13d8984fde2c31ef8a3cb2c038aeec513b8a",
+        "weight_bytes": 36966903920,
+        "weights": [
+          {
+            "file": "model-00003-of-00004.safetensors",
+            "bytes": 9924426248
+          },
+          {
+            "file": "model-00001-of-00004.safetensors",
+            "bytes": 9806722072
+          },
+          {
+            "file": "model-00004-of-00004.safetensors",
+            "bytes": 7340631384
+          },
+          {
+            "file": "model-00002-of-00004.safetensors",
+            "bytes": 9895124216
+          }
+        ],
+        "metadata_bytes": 21851747,
+        "missing_links": [],
+        "latest_file_date": "2025-09-19T01:56:07.769747+08:00"
+      }
+    ],
+    "disk_bytes": 36988932096,
+    "refs": {
+      "main": "8365500e19bc804136f4ad12c2494430239a2d72"
+    }
+  },
+  {
+    "model": "GritLM/GritLM-7B",
+    "cache_path": "/home/jjiang105/.cache/huggingface/hub/models--GritLM--GritLM-7B",
+    "exists": true,
+    "snapshots": [
+      {
+        "revision": "138192cc56441e22a92f37ca05bdfff64ec3d83f",
+        "weight_bytes": 14483498016,
+        "weights": [
+          {
+            "file": "model-00003-of-00003.safetensors",
+            "bytes": 4540516344
+          },
+          {
+            "file": "model-00001-of-00003.safetensors",
+            "bytes": 4943162336
+          },
+          {
+            "file": "model-00002-of-00003.safetensors",
+            "bytes": 4999819336
+          }
+        ],
+        "metadata_bytes": 2381031,
+        "missing_links": [],
+        "latest_file_date": "2025-09-24T05:48:38.598698+08:00"
+      },
+      {
+        "revision": "cb7f7ffb99c0c24ca2c325d798d7ef5c455d5339",
+        "weight_bytes": 14483498016,
+        "weights": [
+          {
+            "file": "model-00003-of-00003.safetensors",
+            "bytes": 4540516344
+          },
+          {
+            "file": "model-00001-of-00003.safetensors",
+            "bytes": 4943162336
+          },
+          {
+            "file": "model-00002-of-00003.safetensors",
+            "bytes": 4999819336
+          }
+        ],
+        "metadata_bytes": 2444386,
+        "missing_links": [],
+        "latest_file_date": "2026-05-07T05:10:03.278870+08:00"
+      }
+    ],
+    "disk_bytes": 14486073344,
+    "refs": {
+      "main": "cb7f7ffb99c0c24ca2c325d798d7ef5c455d5339"
+    }
+  },
+  {
+    "model": "Alibaba-NLP/gte-Qwen2-7B-instruct",
+    "cache_path": "/home/jjiang105/.cache/huggingface/hub/models--Alibaba-NLP--gte-Qwen2-7B-instruct",
+    "exists": true,
+    "snapshots": [
+      {
+        "revision": "a8d08b36ada9cacfe34c4d6f80957772a025daf2",
+        "weight_bytes": 30450519736,
+        "weights": [
+          {
+            "file": "model-00007-of-00007.safetensors",
+            "bytes": 2173997184
+          },
+          {
+            "file": "model-00004-of-00007.safetensors",
+            "bytes": 4932743992
+          },
+          {
+            "file": "model-00002-of-00007.safetensors",
+            "bytes": 4778622352
+          },
+          {
+            "file": "model-00005-of-00007.safetensors",
+            "bytes": 4998852296
+          },
+          {
+            "file": "model-00001-of-00007.safetensors",
+            "bytes": 4970694768
+          },
+          {
+            "file": "model-00006-of-00007.safetensors",
+            "bytes": 3662865184
+          },
+          {
+            "file": "model-00003-of-00007.safetensors",
+            "bytes": 4932743960
+          }
+        ],
+        "metadata_bytes": 11730685,
+        "missing_links": [],
+        "latest_file_date": "2026-05-07T05:10:04.062862+08:00"
+      }
+    ],
+    "disk_bytes": 30462402560,
+    "refs": {
+      "main": "a8d08b36ada9cacfe34c4d6f80957772a025daf2"
+    }
+  },
+  {
+    "model": "Linq-AI-Research/Linq-Embed-Mistral",
+    "cache_path": "/home/jjiang105/.cache/huggingface/hub/models--Linq-AI-Research--Linq-Embed-Mistral",
+    "exists": true,
+    "snapshots": [
+      {
+        "revision": "0c1a0b0589177079acc552433cad51d7c9132379",
+        "weight_bytes": 14221351888,
+        "weights": [
+          {
+            "file": "model-00003-of-00003.safetensors",
+            "bytes": 4278371624
+          },
+          {
+            "file": "model-00001-of-00003.safetensors",
+            "bytes": 4943161664
+          },
+          {
+            "file": "model-00002-of-00003.safetensors",
+            "bytes": 4999818600
+          }
+        ],
+        "metadata_bytes": 2367584,
+        "missing_links": [],
+        "latest_file_date": "2026-05-07T05:10:04.842855+08:00"
+      }
+    ],
+    "disk_bytes": 14223818752,
+    "refs": {
+      "main": "0c1a0b0589177079acc552433cad51d7c9132379"
+    }
+  },
+  {
+    "model": "Salesforce/SFR-Embedding-Mistral",
+    "cache_path": "/home/jjiang105/.cache/huggingface/hub/models--Salesforce--SFR-Embedding-Mistral",
+    "exists": true,
+    "snapshots": [
+      {
+        "revision": "33a60fe7b5e00b9414981280c571e8a4f9f42f1b",
+        "weight_bytes": 14221351888,
+        "weights": [
+          {
+            "file": "model-00003-of-00003.safetensors",
+            "bytes": 4278371624
+          },
+          {
+            "file": "model-00001-of-00003.safetensors",
+            "bytes": 4943161664
+          },
+          {
+            "file": "model-00002-of-00003.safetensors",
+            "bytes": 4999818600
+          }
+        ],
+        "metadata_bytes": 2314123,
+        "missing_links": [],
+        "latest_file_date": "2026-04-23T16:01:56.856250+08:00"
+      }
+    ],
+    "disk_bytes": 14223769600,
+    "refs": {
+      "main": "33a60fe7b5e00b9414981280c571e8a4f9f42f1b"
+    }
+  },
+  {
+    "model": "zeta-alpha-ai/Zeta-Alpha-E5-Mistral",
+    "cache_path": "/home/jjiang105/.cache/huggingface/hub/models--zeta-alpha-ai--Zeta-Alpha-E5-Mistral",
+    "exists": true,
+    "snapshots": [
+      {
+        "revision": "c791d37474fa6a5c72eb3a2522be346bc21fbfc3",
+        "weight_bytes": 14221352176,
+        "weights": [
+          {
+            "file": "model-00003-of-00003.safetensors",
+            "bytes": 4278371712
+          },
+          {
+            "file": "model-00001-of-00003.safetensors",
+            "bytes": 4943161760
+          },
+          {
+            "file": "model-00002-of-00003.safetensors",
+            "bytes": 4999818704
+          }
+        ],
+        "metadata_bytes": 2470299,
+        "missing_links": [],
+        "latest_file_date": "2026-05-07T05:10:05.646847+08:00"
+      }
+    ],
+    "disk_bytes": 14223949824,
+    "refs": {
+      "main": "c791d37474fa6a5c72eb3a2522be346bc21fbfc3"
+    }
+  }
+]

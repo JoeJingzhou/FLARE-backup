@@ -1,0 +1,201 @@
+Embedding column=text rows=64 model=sentence-transformers/all-MiniLM-L6-v2
+Embedding batches:   0%|          | 0/8 [00:00<?, ?it/s]Embedding batches:  25%|██▌       | 2/8 [00:00<00:00, 18.93it/s]Embedding batches:  50%|█████     | 4/8 [00:00<00:00, 18.87it/s]Embedding batches:  75%|███████▌  | 6/8 [00:00<00:00, 18.90it/s]Embedding batches: 100%|██████████| 8/8 [00:00<00:00, 18.83it/s]Embedding batches: 100%|██████████| 8/8 [00:00<00:00, 18.84it/s]
+Saved /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/a.npy shape=(64, 384)
+Saved /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/a_metadata.json
+Embedding column=text rows=64 model=sentence-transformers/all-MiniLM-L6-v2
+Embedding batches:   0%|          | 0/8 [00:00<?, ?it/s]Embedding batches:  25%|██▌       | 2/8 [00:00<00:00, 19.15it/s]Embedding batches:  50%|█████     | 4/8 [00:00<00:00, 19.08it/s]Embedding batches:  75%|███████▌  | 6/8 [00:00<00:00, 19.13it/s]Embedding batches: 100%|██████████| 8/8 [00:00<00:00, 18.99it/s]Embedding batches: 100%|██████████| 8/8 [00:00<00:00, 19.03it/s]
+Saved /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/b.npy shape=(64, 384)
+Saved /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/b_metadata.json
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/prepare/prepare_data.py --y_path /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/a.npy --output_dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_marginal --val_size 0.2 --test_size 0.2
+Loading embeddings...
+y shape = (64, 384)
+Splitting indices (train/val/test)...
+Fitting scalers on TRAIN only (standardization; this release does not apply PCA)...
+Transforming & saving train split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 2257.43chunk/s]
+Saved: Y_train.npy
+Transforming & saving val split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 3127.74chunk/s]
+Saved: Y_val.npy
+Transforming & saving test split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 3398.95chunk/s]
+Saved: Y_test.npy
+Data prepared.
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/train/train_marginal.py --config /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/marginal.yaml --data_dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_marginal --out /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_marginal/marginal_model.pth
+/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+Params: 0.23M
+No learning rate scheduler
+Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]Epoch 0: 100%|██████████| 1/1 [00:00<00:00, 29.14it/s]
+Val NLL: 565.2831
+Epoch 1:   0%|          | 0/1 [00:00<?, ?it/s]Epoch 1: 100%|██████████| 1/1 [00:00<00:00, 31.75it/s]
+Val NLL: 565.2830
+Best Val NLL: 565.2830; saved to /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_marginal/marginal_model.pth
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/prepare/prepare_data.py --y_path /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/a.npy --output_dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_to_a_no_pca --val_size 0.2 --test_size 0.2 --x_path /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/b.npy
+Loading embeddings...
+y shape = (64, 384)
+x shape = (64, 384)
+Splitting indices (train/val/test)...
+Fitting scalers on TRAIN only (standardization; this release does not apply PCA)...
+Transforming & saving train split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 1244.23chunk/s]
+Saved: X_train.npy, Y_train.npy
+Transforming & saving val split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 1910.84chunk/s]
+Saved: X_val.npy, Y_val.npy
+Transforming & saving test split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 1869.12chunk/s]
+Saved: X_test.npy, Y_test.npy
+Data prepared.
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/train/train_conditional.py --config /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/conditional.yaml --data_dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_to_a_no_pca --marginal_model /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_marginal/marginal_model.pth --out /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_to_a_no_pca/cond_flow.pt
+/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+[device] cpu
+[data] train x=(38, 384), y=(38, 384) | val x=(13, 384), y=(13, 384)
+Processing...
+Copied all 24 marginal state entries
+Processing...
+  zero: flow._transform._transforms.0.transform_net.adapter.B.weight (2112, 3)
+  zero: flow._transform._transforms.3.transform_net.adapter.B.weight (2112, 3)
+Processing...
+Processing...
+  train: _transform._transforms.0.transform_net.adapter.A.weight
+  train: _transform._transforms.0.transform_net.adapter.B.weight
+  train: _transform._transforms.0.transform_net.adapter.B.bias
+  train: _transform._transforms.3.transform_net.adapter.A.weight
+  train: _transform._transforms.3.transform_net.adapter.B.weight
+  train: _transform._transforms.3.transform_net.adapter.B.bias
+Processing...
+Processing...
+Processing...
+Processing...
+Processing...
+Processing...
+
+=== Stage1 ===
+Processing...
+Stage1:   0%|          | 0/1 [00:00<?, ?it/s]/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+Stage1:   0%|          | 0/1 [00:00<?, ?it/s, delta_sub=-0.103, lr=0.012000, train=553, val_sub=565]                                                                                                    [full-eval] epoch=1 val(full)=565.180364 Δ(full)=-0.102577
+[stage-end] Stage1  val(full)=565.180364  Δ(full)=-0.102577
+Processing...
+
+=== Stage2 ===
+Processing...
+Processing...
+Stage2:   0%|          | 0/1 [00:00<?, ?it/s]Stage2:   0%|          | 0/1 [00:00<?, ?it/s, delta_sub=-1, lr=0.002400, train=563, val_sub=564]                                                                                                [full-eval] epoch=2 val(full)=564.283428 Δ(full)=-0.999512
+[stage-end] Stage2  val(full)=564.283428  Δ(full)=-0.999512
+Processing...
+
+=== Stage3 ===
+Processing...
+Processing...
+Stage3:   0%|          | 0/1 [00:00<?, ?it/s]Stage3:   0%|          | 0/1 [00:00<?, ?it/s, delta_sub=-2.01, lr=0.001200, train=554, val_sub=563]                                                                                                   [full-eval] epoch=3 val(full)=563.272160 Δ(full)=-2.010780
+[stage-end] Stage3  val(full)=563.272160  Δ(full)=-2.010780
+Processing...
+Processing...
+[best] ValNLL=563.272085  Δ=-2.010855  @ Stage3 epoch=3
+Processing...
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/score/export_per_example_nll.py --data-dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_to_a_no_pca --marginal-model /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_marginal/marginal_model.pth --conditional-model /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_to_a_no_pca/cond_flow.pt --split test --device cpu
+/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+Saved /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_to_a_no_pca/per_example_nll.npz: 13 aligned test NLL pairs
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/prepare/prepare_data.py --y_path /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/b.npy --output_dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_marginal --val_size 0.2 --test_size 0.2
+Loading embeddings...
+y shape = (64, 384)
+Splitting indices (train/val/test)...
+Fitting scalers on TRAIN only (standardization; this release does not apply PCA)...
+Transforming & saving train split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 2273.34chunk/s]
+Saved: Y_train.npy
+Transforming & saving val split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 3313.04chunk/s]
+Saved: Y_val.npy
+Transforming & saving test split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 3313.04chunk/s]
+Saved: Y_test.npy
+Data prepared.
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/train/train_marginal.py --config /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/marginal.yaml --data_dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_marginal --out /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_marginal/marginal_model.pth
+/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+Params: 0.23M
+No learning rate scheduler
+Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]Epoch 0: 100%|██████████| 1/1 [00:00<00:00, 28.82it/s]
+Val NLL: 570.0077
+Epoch 1:   0%|          | 0/1 [00:00<?, ?it/s]Epoch 1: 100%|██████████| 1/1 [00:00<00:00, 32.58it/s]
+Val NLL: 570.0073
+Best Val NLL: 570.0073; saved to /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_marginal/marginal_model.pth
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/prepare/prepare_data.py --y_path /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/b.npy --output_dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_to_b_no_pca --val_size 0.2 --test_size 0.2 --x_path /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/a.npy
+Loading embeddings...
+y shape = (64, 384)
+x shape = (64, 384)
+Splitting indices (train/val/test)...
+Fitting scalers on TRAIN only (standardization; this release does not apply PCA)...
+Transforming & saving train split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 1243.49chunk/s]
+Saved: X_train.npy, Y_train.npy
+Transforming & saving val split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 1861.65chunk/s]
+Saved: X_val.npy, Y_val.npy
+Transforming & saving test split...
+Transforming:   0%|          | 0/1 [00:00<?, ?chunk/s]Transforming: 100%|██████████| 1/1 [00:00<00:00, 1863.31chunk/s]
+Saved: X_test.npy, Y_test.npy
+Data prepared.
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/train/train_conditional.py --config /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/conditional.yaml --data_dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_to_b_no_pca --marginal_model /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_marginal/marginal_model.pth --out /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_to_b_no_pca/cond_flow.pt
+/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+[device] cpu
+[data] train x=(38, 384), y=(38, 384) | val x=(13, 384), y=(13, 384)
+Processing...
+Copied all 24 marginal state entries
+Processing...
+  zero: flow._transform._transforms.0.transform_net.adapter.B.weight (2112, 3)
+  zero: flow._transform._transforms.3.transform_net.adapter.B.weight (2112, 3)
+Processing...
+Processing...
+  train: _transform._transforms.0.transform_net.adapter.A.weight
+  train: _transform._transforms.0.transform_net.adapter.B.weight
+  train: _transform._transforms.0.transform_net.adapter.B.bias
+  train: _transform._transforms.3.transform_net.adapter.A.weight
+  train: _transform._transforms.3.transform_net.adapter.B.weight
+  train: _transform._transforms.3.transform_net.adapter.B.bias
+Processing...
+Processing...
+Processing...
+Processing...
+Processing...
+Processing...
+
+=== Stage1 ===
+Processing...
+Stage1:   0%|          | 0/1 [00:00<?, ?it/s]/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+Stage1:   0%|          | 0/1 [00:00<?, ?it/s, delta_sub=-0.12, lr=0.012000, train=556, val_sub=570]                                                                                                   [full-eval] epoch=1 val(full)=569.887583 Δ(full)=-0.119742
+[stage-end] Stage1  val(full)=569.887583  Δ(full)=-0.119742
+Processing...
+
+=== Stage2 ===
+Processing...
+Processing...
+Stage2:   0%|          | 0/1 [00:00<?, ?it/s]Stage2:   0%|          | 0/1 [00:00<?, ?it/s, delta_sub=-1.54, lr=0.002400, train=558, val_sub=568]                                                                                                   [full-eval] epoch=2 val(full)=568.462440 Δ(full)=-1.544884
+[stage-end] Stage2  val(full)=568.462440  Δ(full)=-1.544884
+Processing...
+
+=== Stage3 ===
+Processing...
+Processing...
+Stage3:   0%|          | 0/1 [00:00<?, ?it/s]Stage3:   0%|          | 0/1 [00:00<?, ?it/s, delta_sub=-3.12, lr=0.001200, train=554, val_sub=567]                                                                                                   [full-eval] epoch=3 val(full)=566.886381 Δ(full)=-3.120944
+[stage-end] Stage3  val(full)=566.886381  Δ(full)=-3.120944
+Processing...
+Processing...
+[best] ValNLL=566.886343  Δ=-3.121019  @ Stage3 epoch=3
+Processing...
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/score/export_per_example_nll.py --data-dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_to_b_no_pca --marginal-model /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_marginal/marginal_model.pth --conditional-model /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_to_b_no_pca/cond_flow.pt --split test --device cpu
+/raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+Saved /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_to_b_no_pca/per_example_nll.npz: 13 aligned test NLL pairs
++ /raid/jjiang105/flare-reproducible-20261103/.venv/bin/python /raid/jjiang105/flare-reproducible-20261103/scripts/score/compute_flare_is.py --data-dir /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows --models a b --target-dims /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/model_dims.json --output /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/flare_is_scores.json
+Saved /raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/flare_is_scores.json
+a	0.010267
+b	0.006971
+PASS: both directed pairs trained, NLL export and scores verified; mismatched targets rejected.

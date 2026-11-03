@@ -1,0 +1,14 @@
+{
+  "RegularFilesExamined": 2425646,
+  "FileHeadersRead": 2015748,
+  "DuplicateInodesSkipped": 347701,
+  "FileReadErrors": 0,
+  "CheckpointMetadataExamined": 4627,
+  "AdditionalArchivesExamined": 25,
+  "TruncatedArchives": 0,
+  "ArchiveReadErrors": 0,
+  "FlowPreprocessors": 1364,
+  "HistoricalSavePathsChecked": 577,
+  "ExistingHistoricalWeights": 0,
+  "Result": "No existing FLARE flow checkpoint identified in scanned account-owned roots; absence does not establish deletion time or cause."
+}

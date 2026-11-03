@@ -1,0 +1,32 @@
+2026-11-03 FLARE 模型权重深查结论
+
+结论：本次在 hkserver 的 jjiang105 账号工作目录、缓存与本人临时目录中，未找到可识别、当前实际存在的 FLARE 自训练流模型权重。不能给出“最新现存权重”的目录，也不能仅凭搜索结果断言删除时间或原因。
+
+范围与方法：
+- 按所有者选择 /raid/jjiang105、/home/jjiang105 下本人条目，以及 /tmp、/var/tmp 下本人条目；扫描本人项目内文件时不以子文件所有者作为排除条件。
+- 纳入环境、缓存、隐藏目录；未进入 SSH 密钥目录、其他所有者的顶层目录与安全审计目录。
+- 检查 2,425,646 个唯一普通文件，读取 2,015,748 个文件头；另有 347,701 个重复 inode 路径无需重复读取。没有文件读取错误。
+- 按文件格式识别 PyTorch ZIP、旧 pickle、safetensors 等，不局限于文件名和扩展名。静态查看参数/配置特征，没有执行模型反序列化或启动 GPU 作业。
+- 额外核对 4,627 个检查点元数据及 25 个非软件/数据供应商目录中的归档；后者无截断或读取错误。
+- FLARE 目录的 1,364 个 joblib 全部识别为 StandardScaler 标准化器，未发现其中保存流模型。
+- 其他包含 weight.npy 的 NPZ 候选属于 Embedding lookup 数据；较新 Agent Memory、LRD 等模型没有识别出 FLARE 流模型结构。
+
+日期证据：
+1. 在找到明确“权重已保存”消息的训练日志中，修改日期最新的一份为北京时间 2025-12-27 17:25:34：
+   /raid/jjiang105/flow-mi-v5/data/orionweller_LIMIT/gte_Qwen2_7B_instruct_to_stella_base_en_v2_no_pca/training.log
+   该日志记载的权重保存位置经别名解析后为：
+   /raid/jjiang105/flow-mi-v5/data/orionweller_LIMIT/gte_Qwen2_7B_instruct_to_stella_base_en_v2_no_pca/cond_flow.pt
+   此路径当前不存在。这是日志证据，不能当作当前权重的修改日期。
+2. 一些 per_example_nll.npz 的修改日期为 2026-02-18；它们是评估输出，不是权重。
+3. 2026-05-11 是 flare-release 代码发布日期；未找到该日实际权重的证据。
+4. 账号历史任务记录在 2026-05-01 出现过带 FLARE 训练命令的 shell 进程；该命令在等待旧训练完成，不能据此认定当日新生成了模型。
+
+路径核对：
+577 份日志中提取到 577 个不同的历史权重路径，逐一解析 /home/jjiang105/Data -> /raid/jjiang105 并检查，当前存在数为 0。
+详细已保存到同目录 FLARE_historical_weight_save_records.json 和 FLARE_historical_weight_path_status.json。
+
+局限：
+扫描不包含其他账号私有目录、未挂载磁盘、离线服务器、远端对象存储或本账号无法据所有者确定归属的其他容器目录；不排除曾被复制到这些位置。
+最终判断结合了文件日期、实际文件格式、参数结构和保存日志，不把较新代码/报告的日期等同于较新权重。
+
+本次未移动、删除或修改服务器文件；已有 FLARE 与 LRD 备份压缩包未改变。上述模型缺失事实也意味着当前精简备份不是完整训练状态快照。

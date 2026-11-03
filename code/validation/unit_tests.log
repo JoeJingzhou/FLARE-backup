@@ -1,0 +1,14 @@
+test_ema_preserves_permutations_and_boolean_buffers (test_workflow.WorkflowTests) ... ok
+test_fractional_hidden_multiplier_is_an_integer_width (test_workflow.WorkflowTests) ... ok
+test_schedule_and_total_epoch_cap (test_workflow.WorkflowTests) ... ok
+test_signature_detects_target_row_order_changes (test_workflow.WorkflowTests) ... ok
+test_transfer_and_checkpoint_roundtrip (test_workflow.WorkflowTests) ... /raid/jjiang105/flare-reproducible-20261103/.venv/lib/python3.10/site-packages/nflows/transforms/coupling.py:481: UserWarning: Inputs to the softmax are not scaled down: initialization might be bad.
+  warnings.warn(
+ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.081s
+
+OK
+Processing...
+Copied all 24 marginal state entries

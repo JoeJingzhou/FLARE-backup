@@ -1,0 +1,37 @@
+{
+  "method": "flare_flow_is",
+  "data_dir": "/raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows",
+  "aggregation": "median",
+  "models": [
+    "a",
+    "b"
+  ],
+  "model_scores": {
+    "a": 0.010267343276586516,
+    "b": 0.006971450952383347
+  },
+  "pair_results": [
+    {
+      "source_model": "a",
+      "target_model": "b",
+      "target_dim": 384,
+      "npz_path": "/raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/a_to_b_no_pca/per_example_nll.npz",
+      "raw_is": 3.942659818209222,
+      "normalized_is": 0.010267343276586516,
+      "n_samples": 13,
+      "marginal_key": "marginal_nll",
+      "conditional_key": "conditional_nll"
+    },
+    {
+      "source_model": "b",
+      "target_model": "a",
+      "target_dim": 384,
+      "npz_path": "/raid/jjiang105/flare-reproducible-20261103/smoke_embeddings_final/flows/b_to_a_no_pca/per_example_nll.npz",
+      "raw_is": 2.6770371657152054,
+      "normalized_is": 0.006971450952383347,
+      "n_samples": 13,
+      "marginal_key": "marginal_nll",
+      "conditional_key": "conditional_nll"
+    }
+  ]
+}

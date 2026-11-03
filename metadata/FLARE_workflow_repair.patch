@@ -1,0 +1,1148 @@
+diff --git a/README.md b/README.md
+index e201606..186eb97 100644
+--- a/README.md
++++ b/README.md
+@@ -13,6 +13,23 @@ The repository is organized around three paths:
+ 
+ ## Install
+ 
++Use Python 3.10 or later. The small CPU workflow was tested on Python 3.10.20.
++For the tested package versions:
++
++```bash
++python -m venv .venv
++source .venv/bin/activate
++python -m pip install -r requirements-repro.txt
++python -m pip install -e . --no-deps
++```
++
++`environment_tested.json` records the actual installed builds. The test used an
++isolated venv inheriting packages from an existing environment; a fresh install
++of every pinned dependency has not been tested. GritLM additionally requires the
++optional `gritlm` package; that model was not part of this smoke check.
++
++The original broad dependency specification remains available:
++
+ ```bash
+ pip install -r requirements.txt
+ ```
+@@ -40,6 +57,18 @@ python scripts/generate_embeddings.py \
+ 
+ ## Prepare Flow Data
+ 
++The release applies train-fitted StandardScaler transforms, with no PCA.
++Legacy PCA options are accepted for compatibility and do not enable PCA.
++Prepare the marginal target as well as each conditional pair with the same
++target embeddings, validation/test fractions and row order:
++
++```bash
++python scripts/prepare/prepare_data.py \
++  --y_path embeddings/DATASET/TARGET/abstract_embeddings.npy \
++  --output_dir data/DATASET/TARGET_marginal \
++  --test_size 0.0 --val_size 0.1
++```
++
+ ```bash
+ python scripts/prepare/prepare_data.py \
+   --x_path embeddings/DATASET/SOURCE/abstract_embeddings.npy \
+@@ -68,6 +97,21 @@ python scripts/train/train_conditional.py \
+ 
+ ## Score FLARE
+ 
++First export aligned per-example NLLs from each trained pair. This step must be
++repeated for every source/target pair; the automatic pipeline below does it.
++
++```bash
++python scripts/score/export_per_example_nll.py \
++  --data-dir data/DATASET/SOURCE_to_TARGET_no_pca \
++  --marginal-model data/DATASET/TARGET_marginal/marginal_model.pth \
++  --conditional-model data/DATASET/SOURCE_to_TARGET_no_pca/cond_flow.pt \
++  --split val --device auto
++```
++
++Use `--split test` for a separate test split created with `--test_size > 0`.
++The exporter rejects checkpoints trained with a different target split or
++transform. Old checkpoints without the new provenance metadata must be retrained.
++
+ ```bash
+ python scripts/score/compute_flare_is.py \
+   --data-dir data/DATASET \
+diff --git a/REPRODUCE.md b/REPRODUCE.md
+new file mode 100644
+index 0000000..5fc586e
+--- /dev/null
++++ b/REPRODUCE.md
+@@ -0,0 +1,98 @@
++# Reproduce the FLARE workflow
++
++This repair is based on release commit
++`b49944e66892e11d24f81059fc1a87b70c3c45b8` (2026-05-11).
++It preserves the original release and adds a separately tested working copy.
++No original trained parameters are needed. Public data/models must remain
++obtainable; this package is not an offline mirror of those resources.
++
++## Complete pipeline
++
++Generate each model's embeddings with `scripts/generate_embeddings.py`, using
++the same corpus, sample filtering, row order, task instructions and pooling.
++Record the source dataset ID/config/split/text columns and model revision.
++The separate backup model inventory lists IDs and available cache revisions;
++those revisions are not proven historical experiment revisions.
++
++Create `embeddings.json` next to your matrices. Paths resolve relative to this
++JSON file, so the project can move between machines:
++
++```json
++{
++  "minilm": "embeddings/minilm.npy",
++  "stella": "embeddings/stella.npy"
++}
++```
++
++Then, from the extracted source root:
++
++```bash
++python scripts/run_flow_pipeline.py \
++  --embeddings embeddings.json --output-dir data/example \
++  --marginal-config configs/marginal.yaml \
++  --conditional-config configs/conditional.yaml
++```
++
++This prepares each marginal and directed conditional pair, trains the flows,
++exports per-example NLLs, and writes `data/example/flare_is_scores.json`.
++`workflow_manifest.json` records exact commands, input hashes and configuration
++contents. Its `completed` flag becomes true only after scoring succeeds.
++Re-running retrains the flows; use a new output directory to keep old results.
++There are M marginal trainings and M*(M-1) conditional trainings for M models.
++
++The default split is 80% train, 10% validation, 10% test; final scoring uses test.
++To follow older validation-only experiments, use
++`--test-size 0 --val-size 0.1 --score-split val`. This is a workflow option,
++not a claim that the historical experiment split or results have been recovered.
++Pass `--device cpu` to hide all GPUs from the subprocesses.
++
++## Fixes
++
++- Conditional training restores the marginal network from its checkpoint
++  architecture instead of rebuilding it from an incompatible conditional YAML.
++  It inherits that backbone, checks complete state transfer and verifies that
++  the initial conditional density equals the marginal density.
++- New checkpoints store explicit architecture kwargs, including adapter rank
++  and scale. Training, NLL export and MI bounds share strict checkpoint loading.
++- Target train/validation array hashes must agree. Pair preparation uses the
++  same target transforms and splits as the corresponding marginal preparation.
++- `export_per_example_nll.py` bridges trained release weights to the NPZ format
++  consumed by the existing IS aggregator. It checks aligned rows and finite NLLs.
++- Three stage lengths and the total epoch cap are configurable. Defaults retain
++  the original actual 60/60/220 schedule. Architecture settings are inherited;
++  unused misleading conditional YAML entries have been removed. Adapter learning
++  rate and the stage transition threshold are explicit in YAML.
++- EMA averages model parameters and copies buffers exactly. It no longer averages
++  integer permutation indices or initialization flags. ActNorm initializes on
++  training samples before the EMA snapshot. Small training sets are not silently
++  dropped when the batch size exceeds their length.
++- Standardization-only preprocessing is stated explicitly. The implementation
++  does not apply PCA; stale PCA objects cause a clear error rather than a silent
++  change in transforms.
++- A Python 3.10 reference environment and pinned principal dependencies are
++  included, replacing reliance on the old Python 3.9 environment. See README
++  for installation and the precise environment validation boundary.
++
++## Validation
++
++```bash
++python -m unittest discover -s tests -v
++python scripts/smoke_workflow.py --output-dir /tmp/flare-smoke-new
++python scripts/smoke_workflow.py --output-dir /tmp/flare-text-smoke-new --with-embeddings
++```
++
++Use a new output directory for each smoke run. The first pipeline uses 64
++synthetic vectors in 8 and 6 dimensions. The text pipeline generates two
++384-dimensional representations of 64 local texts using cached MiniLM with
++mean/CLS pooling. These are two variants of the same encoder, not a comparison
++of two independently pretrained models. Each pipeline trains two marginal
++flows and both directed conditional pairs, exports 13 held-out test NLL pairs
++per direction and verifies the score formula. Each also checks that altered
++target validation rows are rejected. Tests use short schedules, not the full
++paper training settings. No GPU jobs or full benchmark reproduction are part
++of this validation. Baseline training and the other seven embedding models
++have not been revalidated by these checks.
++
++For the offline text check on the original server, set `HF_HUB_OFFLINE=1` and
++`TRANSFORMERS_OFFLINE=1`. A new machine must first download the MiniLM model.
++Evidence and actual test results are stored in `validation/` in the repair pack.
+diff --git a/configs/conditional.yaml b/configs/conditional.yaml
+index 5d4b383..87bb6a1 100644
+--- a/configs/conditional.yaml
++++ b/configs/conditional.yaml
+@@ -1,22 +1,18 @@
+ model: CondNSF
+-layers: 5
+-hidden_mult: 0.35
+-cond_hidden: 256
+-cond_inject: FiLM
++# Backbone layers, width, bins and normalization come from the marginal checkpoint.
+ dropout: 0.0
+-spline_bins: 8
+-use_actnorm: true
+-use_inv1x1: false
+-optimizer: AdamW
+-lr: 0.001
++adapter_rank: 64
++adapter_scale: 0.002
++base_lr: 0.012
++min_adapter_lr: 0.004
+ weight_decay: 1e-5
+ batch_size: 8
+-ema_decay: 0.999
+-early_stop_patience: 30
+-x_standardize: true
+-y_pca_keep_var: 0.98
+ seed: 42
+-max_epochs: 250
+-use_amp: true
++stage_epochs: [60, 60, 220]
++max_epochs: 340
++use_amp: false
+ grad_accum_steps: 8
+-context_proj_dim: null
++eval_bs: 8192
++val_subset_ratio: 0.1
++val_subset_min: 1024
++val_full_every: 10
+diff --git a/environment_tested.json b/environment_tested.json
+new file mode 100644
+index 0000000..8eedbd0
+--- /dev/null
++++ b/environment_tested.json
+@@ -0,0 +1,28 @@
++{
++  "python": "3.10.20 (main, Jun 11 2026, 15:17:37) [GCC 14.3.0]",
++  "executable": "/raid/jjiang105/flare-reproducible-20261103/.venv/bin/python",
++  "packages": {
++    "torch": "2.5.1+cu121",
++    "numpy": "1.26.4",
++    "scipy": "1.15.3",
++    "scikit-learn": "1.7.2",
++    "pandas": "2.3.3",
++    "tqdm": "4.68.3",
++    "pyyaml": "6.0.3",
++    "joblib": "1.5.3",
++    "nflows": "0.14",
++    "matplotlib": "3.10.9",
++    "seaborn": "0.13.2",
++    "transformers": "4.51.1",
++    "datasets": "4.0.0",
++    "accelerate": "1.9.0",
++    "psutil": "7.2.2",
++    "tokenizers": "0.21.4",
++    "huggingface-hub": "0.36.2",
++    "safetensors": "0.8.0",
++    "tensorboard": "2.20.0",
++    "setuptools": "79.0.1",
++    "wheel": "0.47.0"
++  },
++  "environment_setup": "Python 3.10 venv with system-site-packages from existing memsearcher-smoke; nflows and seaborn installed in isolated venv; not a fresh dependency solve"
++}
+\ No newline at end of file
+diff --git a/flare/checkpoints.py b/flare/checkpoints.py
+new file mode 100644
+index 0000000..4f68ed1
+--- /dev/null
++++ b/flare/checkpoints.py
+@@ -0,0 +1,53 @@
++"""Checkpoint interfaces shared by training and scoring (release flow classes)."""
++from pathlib import Path
++import hashlib
++
++import torch
++
++from .flows.marginal import MarginalFlow
++from .flows.conditional import ConditionalFlow
++
++
++def target_data_signature(data_dir):
++    """Detect different target transforms, row orders or split assignments."""
++    result = {}
++    for name in ("Y_train.npy", "Y_val.npy"):
++        digest = hashlib.sha256()
++        with (Path(data_dir) / name).open("rb") as handle:
++            for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
++                digest.update(chunk)
++        result[name] = digest.hexdigest()
++    return result
++
++
++def marginal_kwargs(config, y_dim):
++    return dict(y_dim=int(y_dim),
++                hidden=max(1, int(min(2048, float(config['hidden_mult']) * y_dim))),
++                layers=int(config['layers']), bins=int(config['spline_bins']),
++                use_actnorm=bool(config.get('use_actnorm', True)),
++                use_inv1x1=bool(config.get('use_inv1x1', False)))
++
++
++def load_flow(path, kind, *, y_dim, x_dim=None, device='cpu'):
++    """Load tensor/primitive checkpoints strictly; support original release metadata."""
++    checkpoint = torch.load(path, map_location='cpu', weights_only=True)
++    if kind not in ('marginal', 'conditional'):
++        raise ValueError(f'Unknown flow kind: {kind}')
++    config = checkpoint['cfg' if kind == 'marginal' else 'config']
++    kwargs = checkpoint.get('model_kwargs')
++    if kwargs is None:
++        kwargs = marginal_kwargs(config, y_dim)
++        if kind == 'conditional':
++            kwargs.update(x_dim=int(x_dim), dropout=float(config.get('dropout', 0.0)),
++                          output_scale=float(config.get('output_scale', 0.1)),
++                          adapter_rank=int(config.get('adapter_rank', 64)),
++                          adapter_scale=float(config.get('adapter_scale', 2e-3)))
++    else:
++        kwargs = dict(kwargs)
++    if kwargs['y_dim'] != y_dim or (kind == 'conditional' and kwargs['x_dim'] != x_dim):
++        raise ValueError(f'Checkpoint dimensions do not match data: {kwargs}')
++    cls = MarginalFlow if kind == 'marginal' else ConditionalFlow
++    model = cls(**kwargs).to(device)
++    model.load_state_dict(checkpoint['state_dict'], strict=True)
++    model.eval()
++    return model, checkpoint, kwargs
+diff --git a/flare/utils.py b/flare/utils.py
+index 26af65a..ef7bce0 100644
+--- a/flare/utils.py
++++ b/flare/utils.py
+@@ -5,10 +5,15 @@ class EMA:
+     def __init__(self, model, decay=0.999):
+         self.decay = decay
+         self.shadow = {k: v.detach().clone() for k,v in model.state_dict().items()}
++        self.parameter_names = {name for name, _ in model.named_parameters()}
+     @torch.no_grad()
+     def update(self, model):
+         for k, v in model.state_dict().items():
+-            self.shadow[k] = self.decay*self.shadow[k] + (1-self.decay)*v.detach()
++            if k in self.parameter_names:
++                self.shadow[k].lerp_(v.detach(), 1 - self.decay)
++            else:
++                # Permutations and ActNorm initialization flags are state, not averages.
++                self.shadow[k].copy_(v.detach())
+     @torch.no_grad()
+     def load_shadow(self, model):
+         model.load_state_dict(self.shadow, strict=True)
+diff --git a/requirements-repro.txt b/requirements-repro.txt
+new file mode 100644
+index 0000000..3fdf5ac
+--- /dev/null
++++ b/requirements-repro.txt
+@@ -0,0 +1,23 @@
++# Versions used for the CPU integration check (Python 3.10).
++# Public torch version permits platform-specific CPU/CUDA wheels.
++torch==2.5.1
++numpy==1.26.4
++scipy==1.15.3
++scikit-learn==1.7.2
++pandas==2.3.3
++tqdm==4.68.3
++pyyaml==6.0.3
++joblib==1.5.3
++nflows==0.14
++matplotlib==3.10.9
++seaborn==0.13.2
++transformers==4.51.1
++datasets==4.0.0
++accelerate==1.9.0
++psutil==7.2.2
++tokenizers==0.21.4
++huggingface-hub==0.36.2
++safetensors==0.8.0
++tensorboard==2.20.0
++setuptools==79.0.1
++wheel==0.47.0
+diff --git a/scripts/prepare/prepare_data.py b/scripts/prepare/prepare_data.py
+index 6fb04e8..17cc9d8 100644
+--- a/scripts/prepare/prepare_data.py
++++ b/scripts/prepare/prepare_data.py
+@@ -61,6 +61,10 @@ def main():
+     ap.add_argument('--x_pca_keep_var', type=float, default=None)
+     ap.add_argument('--chunk_size', type=int, default=8192, help="See README for details")
+     args = ap.parse_args()
++    if args.val_size <= 0 or args.test_size < 0 or args.val_size + args.test_size >= 1:
++        ap.error('Require val_size > 0, test_size >= 0 and their sum < 1')
++    if args.chunk_size <= 0:
++        ap.error('chunk_size must be positive')
+ 
+     print("Loading embeddings...")
+     y = np.load(args.y_path, mmap_mode='r')
+@@ -70,6 +74,11 @@ def main():
+         print(f"x shape = {x.shape}")
+         if len(x) != len(y):
+             raise ValueError('X and Y must have the same number of samples.')
++    for name, array in [('Y', y), ('X', x)]:
++        if array is not None and (array.ndim != 2 or not len(array) or array.shape[1] < 2):
++            raise ValueError(f'{name} must be a nonempty 2D embedding matrix with at least two features')
++    if (Path(args.output_dir) / 'scalers/y_pca.joblib').exists():
++        raise ValueError('This release uses standardization only; use a clean output directory without stale PCA')
+ 
+     os.makedirs(args.output_dir, exist_ok=True)
+ 
+@@ -88,7 +97,7 @@ def main():
+         rel = args.test_size / (args.val_size + args.test_size) if (args.val_size + args.test_size) > 0 else 0.5
+         idx_val, idx_test = train_test_split(idx_tmp, test_size=rel, random_state=42, shuffle=True)
+ 
+-    print("Fitting scalers on TRAIN only (y: standardize + PCA whiten)...")
++    print("Fitting scalers on TRAIN only (standardization; this release does not apply PCA)...")
+     y_train_fit = y[idx_train]
+     x_train_fit = x[idx_train] if x is not None else None
+     scalers_dir = os.path.join(args.output_dir, 'scalers')
+@@ -118,6 +127,11 @@ def main():
+         "x_path": args.x_path,
+         "y_path": args.y_path,
+         "pca_keep_var": args.pca_keep_var,
++        "preprocessing": "StandardScaler fitted on train only; no PCA",
++        "legacy_pca_flags_effective": False,
++        "split_seed": 42,
++        "val_size": args.val_size,
++        "test_size": args.test_size,
+         "chunk_size": args.chunk_size,
+         "n_samples": int(len(y)),
+     }
+diff --git a/scripts/run_flow_pipeline.py b/scripts/run_flow_pipeline.py
+new file mode 100644
+index 0000000..4086286
+--- /dev/null
++++ b/scripts/run_flow_pipeline.py
+@@ -0,0 +1,101 @@
++#!/usr/bin/env python3
++"""Prepare, train, export NLLs, and score every directed embedding pair."""
++import argparse
++import hashlib
++import json
++import os
++from pathlib import Path
++import re
++import subprocess
++import sys
++
++import numpy as np
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++def main():
++    ap = argparse.ArgumentParser(description=__doc__)
++    ap.add_argument('--embeddings', type=Path, required=True,
++                    help='JSON mapping model names to .npy paths; relative paths resolve beside JSON')
++    ap.add_argument('--output-dir', type=Path, required=True)
++    ap.add_argument('--marginal-config', type=Path, default=ROOT / 'configs/marginal.yaml')
++    ap.add_argument('--conditional-config', type=Path, default=ROOT / 'configs/conditional.yaml')
++    ap.add_argument('--device', choices=['auto', 'cpu'], default='auto')
++    ap.add_argument('--val-size', type=float, default=0.1)
++    ap.add_argument('--test-size', type=float, default=0.1)
++    ap.add_argument('--score-split', choices=['val', 'test'], default='test')
++    args = ap.parse_args()
++    if args.score_split == 'test' and args.test_size <= 0:
++        ap.error('Test scoring requires --test-size > 0; use --score-split val otherwise')
++    if args.val_size <= 0 or args.test_size < 0 or args.val_size + args.test_size >= 1:
++        ap.error('Require a positive validation split and val_size + test_size < 1')
++    inputs = json.loads(args.embeddings.read_text(encoding='utf-8'))
++    if len(inputs) < 2:
++        ap.error('At least two embedding models are required')
++    paths, dims, rows, digests = {}, {}, set(), {}
++    for name, value in inputs.items():
++        if not re.fullmatch(r'[A-Za-z0-9_.-]+', name):
++            ap.error(f'Use a simple filesystem-safe model name: {name}')
++        path = Path(value)
++        path = (args.embeddings.resolve().parent / path).resolve() if not path.is_absolute() else path.resolve()
++        matrix = np.load(path, mmap_mode='r')
++        if matrix.ndim != 2 or matrix.shape[1] < 2:
++            ap.error(f'{name} must be a 2D embedding matrix with at least two features')
++        paths[name], dims[name] = path, matrix.shape[1]
++        rows.add(len(matrix))
++        digest = hashlib.sha256()
++        with path.open('rb') as f:
++            for block in iter(lambda: f.read(8 * 1024 * 1024), b''):
++                digest.update(block)
++        digests[name] = digest.hexdigest()
++    if len(rows) != 1:
++        ap.error('All embedding matrices must have the same rows in the same sample order')
++    out = args.output_dir.resolve()
++    out.mkdir(parents=True, exist_ok=True)
++    environment = dict(os.environ)
++    if args.device == 'cpu':
++        environment['CUDA_VISIBLE_DEVICES'] = ''
++    manifest = dict(embeddings={k: str(v) for k, v in paths.items()}, embedding_sha256=digests,
++                    target_dims=dims, score_split=args.score_split, commands=[], completed=False,
++                    marginal_config=args.marginal_config.read_text(),
++                    conditional_config=args.conditional_config.read_text())
++
++    def run(script, *arguments):
++        command = [sys.executable, str(ROOT / script), *map(str, arguments)]
++        manifest['commands'].append(command)
++        (out / 'workflow_manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
++        print('+', ' '.join(command), flush=True)
++        subprocess.run(command, env=environment, check=True)
++
++    def prepare(target, directory, source=None):
++        extra = ['--x_path', paths[source]] if source else []
++        run('scripts/prepare/prepare_data.py', '--y_path', paths[target], '--output_dir', directory,
++            '--val_size', args.val_size, '--test_size', args.test_size, *extra)
++
++    for target in inputs:
++        marginal_dir = out / f'{target}_marginal'
++        prepare(target, marginal_dir)
++        marginal = marginal_dir / 'marginal_model.pth'
++        run('scripts/train/train_marginal.py', '--config', args.marginal_config,
++            '--data_dir', marginal_dir, '--out', marginal)
++        for source in inputs:
++            if source == target:
++                continue
++            pair = out / f'{source}_to_{target}_no_pca'
++            prepare(target, pair, source)
++            run('scripts/train/train_conditional.py', '--config', args.conditional_config,
++                '--data_dir', pair, '--marginal_model', marginal, '--out', pair / 'cond_flow.pt')
++            run('scripts/score/export_per_example_nll.py', '--data-dir', pair,
++                '--marginal-model', marginal, '--conditional-model', pair / 'cond_flow.pt',
++                '--split', args.score_split, '--device', args.device)
++    dimensions = out / 'model_dims.json'
++    dimensions.write_text(json.dumps(dims, indent=2), encoding='utf-8')
++    run('scripts/score/compute_flare_is.py', '--data-dir', out, '--models', *inputs,
++        '--target-dims', dimensions, '--output', out / 'flare_is_scores.json')
++    manifest['completed'] = True
++    (out / 'workflow_manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/score/compute_mi_bounds.py b/scripts/score/compute_mi_bounds.py
+index 670947e..cec455d 100644
+--- a/scripts/score/compute_mi_bounds.py
++++ b/scripts/score/compute_mi_bounds.py
+@@ -20,6 +20,7 @@ sys.path.insert(0, str(ROOT))
+ 
+ from flare.flows.marginal import MarginalFlow
+ from flare.flows.conditional import ConditionalFlow
++from flare.checkpoints import load_flow
+ 
+ 
+ class MarginalBoundCalculator:
+@@ -49,23 +50,13 @@ class MarginalBoundCalculator:
+     
+     def _load_model(self):
+         """Release pipeline helper."""
+-        checkpoint = torch.load(self.model_path, map_location='cpu')
++        self.model, checkpoint, _ = load_flow(self.model_path, 'marginal',
++                                               y_dim=self.d, device=self.device)
+         self.config = checkpoint['cfg']
+         
+         self.L = self.config['layers']
+         self.bins = self.config['spline_bins']
+         
+-        self.model = MarginalFlow(
+-            self.d,
+-            hidden=int(min(2048, self.config['hidden_mult'] * self.d)),
+-            layers=self.L,
+-            bins=self.bins,
+-            use_actnorm=self.config['use_actnorm'],
+-            use_inv1x1=self.config['use_inv1x1']
+-        ).to(self.device)
+-        
+-        self.model.load_state_dict(checkpoint['state_dict'])
+-        self.model.eval()
+     
+     def _compute_intrinsic_dimensions(self, PCA, fast_mode=False):
+         """Release pipeline helper."""
+@@ -211,28 +202,13 @@ class ConditionalBoundCalculator:
+     
+     def _load_model(self):
+         """Release pipeline helper."""
+-        checkpoint = torch.load(self.model_path, map_location='cpu')
++        self.model, checkpoint, _ = load_flow(self.model_path, 'conditional',
++                                               y_dim=self.y_dim, x_dim=self.x_dim, device=self.device)
+         self.config = checkpoint['config']
+         
+         self.L = self.config['layers']
+         self.bins = self.config['spline_bins']
+         
+-        self.model = ConditionalFlow(
+-            y_dim=self.y_dim,
+-            x_dim=self.x_dim,
+-            hidden=int(min(2048, self.config['hidden_mult'] * self.y_dim)),
+-            layers=self.L,
+-            bins=self.bins,
+-            use_actnorm=self.config['use_actnorm'],
+-            use_inv1x1=self.config['use_inv1x1'],
+-            dropout=self.config.get('dropout', 0.0),
+-            output_scale=0.1,
+-            adapter_rank=int(self.config.get('adapter_rank', 64)),
+-            adapter_scale=float(self.config.get('adapter_scale', 2e-3))
+-        ).to(self.device)
+-        
+-        self.model.load_state_dict(checkpoint['state_dict'])
+-        self.model.eval()
+     
+     def _compute_intrinsic_dimensions(self, PCA, fast_mode=False):
+         """Release pipeline helper."""
+diff --git a/scripts/score/export_per_example_nll.py b/scripts/score/export_per_example_nll.py
+new file mode 100644
+index 0000000..9264b84
+--- /dev/null
++++ b/scripts/score/export_per_example_nll.py
+@@ -0,0 +1,67 @@
++#!/usr/bin/env python3
++"""Export paired held-out NLLs from release flow checkpoints for FLARE scoring."""
++import argparse
++import json
++from pathlib import Path
++import sys
++
++import numpy as np
++import torch
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path.insert(0, str(ROOT))
++from flare.checkpoints import load_flow, target_data_signature
++
++
++def main():
++    ap = argparse.ArgumentParser(description=__doc__)
++    ap.add_argument('--data-dir', type=Path, required=True)
++    ap.add_argument('--marginal-model', type=Path, required=True)
++    ap.add_argument('--conditional-model', type=Path, required=True)
++    ap.add_argument('--split', choices=['val', 'test'], default='val')
++    ap.add_argument('--batch-size', type=int, default=256)
++    ap.add_argument('--device', default='auto')
++    ap.add_argument('--output', type=Path)
++    args = ap.parse_args()
++    if args.batch_size <= 0:
++        ap.error('--batch-size must be positive')
++    device = ('cuda' if torch.cuda.is_available() else 'cpu') if args.device == 'auto' else args.device
++    x = np.load(args.data_dir / f'X_{args.split}.npy', mmap_mode='r')
++    y = np.load(args.data_dir / f'Y_{args.split}.npy', mmap_mode='r')
++    if x.ndim != 2 or y.ndim != 2 or len(x) != len(y) or not len(y):
++        raise ValueError('Expected nonempty, aligned two-dimensional X/Y arrays')
++    marginal, mck, _ = load_flow(args.marginal_model, 'marginal', y_dim=y.shape[1], device=device)
++    conditional, cck, _ = load_flow(args.conditional_model, 'conditional',
++                                    y_dim=y.shape[1], x_dim=x.shape[1], device=device)
++    signature = target_data_signature(args.data_dir)
++    for name, checkpoint in [('marginal', mck), ('conditional', cck)]:
++        if checkpoint.get('target_data_signature') != signature:
++            raise ValueError(f'{name} checkpoint target data do not match; use this release to retrain')
++    marginal_nll, conditional_nll = [], []
++    with torch.no_grad():
++        for start in range(0, len(y), args.batch_size):
++            xb = torch.from_numpy(np.array(x[start:start + args.batch_size], dtype=np.float32)).to(device)
++            yb = torch.from_numpy(np.array(y[start:start + args.batch_size], dtype=np.float32)).to(device)
++            marginal_nll.append((-marginal.log_prob(yb)).cpu().numpy())
++            conditional_nll.append((-conditional.log_prob(yb, context=xb)).cpu().numpy())
++    marginal_nll = np.concatenate(marginal_nll)
++    conditional_nll = np.concatenate(conditional_nll)
++    if not np.isfinite(marginal_nll).all() or not np.isfinite(conditional_nll).all():
++        raise ValueError('Non-finite NLLs; refusing to produce a scoring cache')
++    output = args.output or args.data_dir / 'per_example_nll.npz'
++    if output.suffix != '.npz':
++        raise ValueError('--output must end with .npz')
++    output.parent.mkdir(parents=True, exist_ok=True)
++    np.savez_compressed(output, marginal_nll=marginal_nll, conditional_nll=conditional_nll)
++    metadata = dict(split=args.split, n_samples=len(y), x_dim=x.shape[1], y_dim=y.shape[1],
++                    data_dir=str(args.data_dir.resolve()),
++                    marginal_model=str(args.marginal_model.resolve()),
++                    conditional_model=str(args.conditional_model.resolve()),
++                    target_data_signature=signature,
++                    raw_is=float(marginal_nll.mean() - conditional_nll.mean()))
++    output.with_suffix('.metadata.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
++    print(f'Saved {output}: {len(y)} aligned {args.split} NLL pairs')
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/smoke_workflow.py b/scripts/smoke_workflow.py
+new file mode 100644
+index 0000000..b1708e3
+--- /dev/null
++++ b/scripts/smoke_workflow.py
+@@ -0,0 +1,84 @@
++#!/usr/bin/env python3
++"""Small CPU integration check. Scores are diagnostics, not research results."""
++import argparse
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++
++import numpy as np
++import yaml
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++def main():
++    ap = argparse.ArgumentParser(description=__doc__)
++    ap.add_argument('--output-dir', type=Path, required=True)
++    ap.add_argument('--with-embeddings', action='store_true',
++                    help='Also test text encoding using MiniLM mean and CLS pooling')
++    args = ap.parse_args()
++    out = args.output_dir.resolve()
++    out.mkdir(parents=True, exist_ok=False)
++    env = dict(os.environ, CUDA_VISIBLE_DEVICES='', OMP_NUM_THREADS='1',
++               MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', TOKENIZERS_PARALLELISM='false')
++
++    def run(script, *arguments):
++        subprocess.run([sys.executable, str(ROOT / script), *map(str, arguments)],
++                       env=env, check=True)
++
++    if args.with_embeddings:
++        texts = out / 'texts.txt'
++        topics = ['science', 'finance', 'literature', 'music', 'history', 'software', 'sports', 'travel']
++        texts.write_text('\n'.join(f'Example {i}: {topics[i % len(topics)]} research discusses {i*i+7} observations and topic {topics[(i//8)%len(topics)]}.' for i in range(64)), encoding='utf-8')
++        for name, pooling in [('a', 'mean'), ('b', 'cls')]:
++            run('scripts/generate_embeddings.py', '--input-file', texts, '--model', 'minilm',
++                '--output-dir', out, '--output-name', name, '--pooling', pooling,
++                '--batch-size', 8, '--max-length', 64, '--device', 'cpu', '--no-trust-remote-code')
++    else:
++        rng = np.random.default_rng(42)
++        a = rng.normal(size=(64, 8)).astype(np.float32)
++        b = (a @ rng.normal(size=(8, 6)) + .2 * rng.normal(size=(64, 6))).astype(np.float32)
++        np.save(out / 'a.npy', a)
++        np.save(out / 'b.npy', b)
++    inputs = out / 'embeddings.json'
++    inputs.write_text(json.dumps(dict(a='a.npy', b='b.npy')), encoding='utf-8')
++    marginal = yaml.safe_load((ROOT / 'configs/marginal.yaml').read_text())
++    marginal.update(layers=2, hidden_mult=.125 if args.with_embeddings else 2,
++                    max_epochs=2, batch_size=128, spline_bins=4)
++    conditional = yaml.safe_load((ROOT / 'configs/conditional.yaml').read_text())
++    conditional.update(stage_epochs=[1, 1, 1], max_epochs=3, batch_size=16,
++                       grad_accum_steps=1, adapter_rank=3, val_full_every=1)
++    for name, config in [('marginal', marginal), ('conditional', conditional)]:
++        (out / f'{name}.yaml').write_text(yaml.safe_dump(config), encoding='utf-8')
++    run('scripts/run_flow_pipeline.py', '--embeddings', inputs, '--output-dir', out / 'flows',
++        '--marginal-config', out / 'marginal.yaml', '--conditional-config', out / 'conditional.yaml',
++        '--val-size', .2, '--test-size', .2, '--device', 'cpu')
++    scores = json.loads((out / 'flows/flare_is_scores.json').read_text())
++    assert len(scores['pair_results']) == 2
++    assert all(np.isfinite(v) for v in scores['model_scores'].values())
++    for pair in scores['pair_results']:
++        data = np.load(pair['npz_path'])
++        expected = (data['marginal_nll'].astype(float).mean() - data['conditional_nll'].astype(float).mean()) / pair['target_dim']
++        np.testing.assert_allclose(pair['normalized_is'], expected, rtol=1e-7, atol=1e-7)
++        assert pair['n_samples'] == 13
++    # Reject a target whose validation rows no longer match the marginal checkpoint.
++    pair = out / 'flows/a_to_b_no_pca'
++    y = np.load(pair / 'Y_val.npy')
++    np.save(pair / 'Y_val.npy', y[::-1])
++    rejection = subprocess.run([sys.executable, str(ROOT / 'scripts/score/export_per_example_nll.py'),
++        '--data-dir', str(pair), '--marginal-model', str(out / 'flows/b_marginal/marginal_model.pth'),
++        '--conditional-model', str(pair / 'cond_flow.pt'), '--split', 'test', '--device', 'cpu'],
++        env=env, capture_output=True, text=True)
++    np.save(pair / 'Y_val.npy', y)
++    assert rejection.returncode != 0 and 'target data do not match' in rejection.stderr
++    print('PASS: both directed pairs trained, NLL export and scores verified; mismatched targets rejected.')
++    (out / 'SMOKE_RESULT.json').write_text(json.dumps(dict(passed=True, embedding_generation=args.with_embeddings,
++        models='MiniLM mean/CLS variants' if args.with_embeddings else 'synthetic arrays',
++        pairs=2, sample_count=64, held_out_samples=13,
++        mismatch_rejected=True, cuda_visible_devices=env['CUDA_VISIBLE_DEVICES']), indent=2))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/train/train_conditional.py b/scripts/train/train_conditional.py
+index 629ce2b..640bfc7 100644
+--- a/scripts/train/train_conditional.py
++++ b/scripts/train/train_conditional.py
+@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
+ sys.path.insert(0, str(ROOT))
+ from flare.flows.marginal import MarginalFlow
+ from flare.flows.conditional import ConditionalFlow
++from flare.checkpoints import load_flow, target_data_signature
+ 
+ 
+ def copy_shared_weights(marginal, conditional):
+@@ -46,8 +47,10 @@ def copy_shared_weights(marginal, conditional):
+                 cond_sd[alias].copy_(m)
+                 alias_copied += 1
+ 
+-    conditional.flow.load_state_dict(cond_sd, strict=False)
+-    print("Processing...")
++    if copied + alias_copied != len(marg_sd):
++        raise ValueError('Conditional backbone does not match the marginal checkpoint')
++    conditional.flow.load_state_dict(cond_sd, strict=True)
++    print(f"Copied all {copied + alias_copied} marginal state entries")
+ 
+ 
+ def zero_init_adapter_B_only(model):
+@@ -121,7 +124,7 @@ class ThreeStageTrainer:
+         self.device = device
+         self.base_lr = base_lr
+         self.min_lr = min_lr
+-        self.amp = False  # bool(cfg.get("amp", True))
++        self.amp = bool(cfg.get('use_amp', False))
+         self.scaler = GradScaler('cuda', enabled=(self.amp and device.type == "cuda"))
+ 
+         self.val_subset_ratio = float(cfg.get('val_subset_ratio', 0.1))
+@@ -134,6 +137,16 @@ class ThreeStageTrainer:
+             dict(name="Stage2", epochs=60, unfreeze_ratio=0.5, lr_factor=1.0, patience=8, min_delta=1e-5),
+             dict(name="Stage3", epochs=220, unfreeze_ratio=1.0, lr_factor=1.0, patience=12, min_delta=1e-5),
+         ]
++        epochs = cfg.get('stage_epochs', [60, 60, 220])
++        if len(epochs) != 3 or any(int(n) != n or n < 0 for n in epochs):
++            raise ValueError('stage_epochs must contain three nonnegative integers')
++        budget = int(cfg.get('max_epochs', sum(epochs)))
++        if budget <= 0 or sum(epochs) <= 0:
++            raise ValueError('The training epoch budget must be positive')
++        for stage, count in zip(self.stages, epochs):
++            stage['epochs'] = min(int(count), budget)
++            budget -= stage['epochs']
++        self.stages = [stage for stage in self.stages if stage['epochs'] > 0]
+ 
+     def build_val_subset_idx(self, n_val, seed=43, device='cpu'):
+         if self.val_subset_size > 0:
+@@ -236,6 +249,8 @@ class ThreeStageTrainer:
+         with torch.no_grad():
+             init_cond_full = eval_nll_cond(conditional, x_val, y_val, batch_size=eval_bs, use_amp=False)
+             init_cond_sub = eval_nll_cond_indices(conditional, x_val, y_val, val_idx, batch_size=eval_bs, use_amp=False)
++        if abs(init_cond_full - val_nll_marg) > 1e-4:
++            raise ValueError('Transferred conditional flow must initially equal the marginal flow')
+         print("Processing...")
+         if abs(init_cond_full - val_nll_marg) <= 1.0:
+             print("Processing...")
+@@ -247,31 +262,30 @@ class ThreeStageTrainer:
+         else:
+             print("Processing...")
+ 
+-        best_overall = dict(nll=float('inf'), state=None, epoch=0, delta=float('inf'), stage="")
++        best_overall = dict(nll=init_cond_full,
++                            state={k: v.detach().cpu().clone() for k, v in conditional.state_dict().items()},
++                            epoch=0, delta=init_cond_full - val_nll_marg, stage="initial")
+         total_epoch = 0
+ 
+         for si, st in enumerate(self.stages):
+             is_last_stage = (si == len(self.stages) - 1)
+             print(f"\n=== {st['name']} ===")
+ 
+-            if st['name'] != "Stage1" and os.path.exists(out_path):
+-                checkpoint = torch.load(out_path, map_location=self.device)
+-                if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
+-                    conditional.load_state_dict(checkpoint['state_dict'])
+-                    print("Processing...")
++            if si > 0:
++                conditional.load_state_dict(best_overall['state'], strict=True)
+ 
+             skip_act = (st['name'] != "Stage3")
+             if st['unfreeze_ratio'] > 0.0:
+                 self.unfreeze_partial_backbone(conditional, st['unfreeze_ratio'], skip_actnorm=skip_act)
+ 
+             if st['name'] == "Stage1":
+-                opt, sch = self.build_optim(conditional, lr_adapter=0.012, lr_backbone=0.0)
++                opt, sch = self.build_optim(conditional, lr_adapter=self.base_lr, lr_backbone=0.0)
+             elif st['name'] == "Stage2":
+-                opt, sch = self.build_optim(conditional, lr_adapter=0.012,
+-                                            lr_backbone=0.012*0.2)
++                opt, sch = self.build_optim(conditional, lr_adapter=self.base_lr,
++                                            lr_backbone=self.base_lr*0.2)
+             else:
+-                opt, sch = self.build_optim(conditional, lr_adapter=0.012,
+-                                            lr_backbone=0.012*0.1)
++                opt, sch = self.build_optim(conditional, lr_adapter=self.base_lr,
++                                            lr_backbone=self.base_lr*0.1)
+ 
+             stopper = EarlyStopper(patience=st['patience'], min_delta=st['min_delta'], stage_name=st['name'])
+             rollback_count = 0
+@@ -306,7 +320,7 @@ class ThreeStageTrainer:
+                 
+                 lr_adapter_cur = max(pg['lr'] for pg in opt.param_groups)
+                 
+-                if lr_adapter_cur < 0.004:
++                if lr_adapter_cur < float(self.cfg.get('min_adapter_lr', 0.004)):
+                     if is_last_stage:
+                         print("Processing...")
+                         stop_training = True
+@@ -383,7 +397,9 @@ class ThreeStageTrainer:
+                             'val_loss': best_overall['nll'],
+                             'delta': best_overall['delta'],
+                             'stage': best_overall['stage'],
+-                            'config': self.cfg
++                            'config': self.cfg,
++                            'model_kwargs': self.cfg['model_kwargs'],
++                            'target_data_signature': self.cfg['target_data_signature']
+                         }
+                         torch.save(checkpoint, out_path)
+                         print("Processing...")
+@@ -418,7 +434,9 @@ class ThreeStageTrainer:
+                 'val_loss': best_overall['nll'],
+                 'delta': best_overall['delta'],
+                 'stage': best_overall['stage'],
+-                'config': self.cfg
++                'config': self.cfg,
++                'model_kwargs': self.cfg['model_kwargs'],
++                'target_data_signature': self.cfg['target_data_signature']
+             }
+             torch.save(checkpoint, out_path)
+         print("Processing...")
+@@ -480,7 +498,7 @@ def main():
+     cfg.setdefault('val_subset_size', 0)
+     cfg.setdefault('val_full_every', 10)
+ 
+-    base_lr_cfg = cfg.get('base_lr', 1e-2)
++    base_lr_cfg = cfg.get('base_lr', 0.012)
+     cfg['base_lr'] = base_lr_cfg
+ 
+     torch.manual_seed(cfg['seed'])
+@@ -488,6 +506,9 @@ def main():
+ 
+     data_dir = Path(args.data_dir)
+     x_tr, y_tr, x_va, y_va = load_xy(data_dir)
++    if len(x_tr) != len(y_tr) or len(x_va) != len(y_va) or not len(y_tr) or not len(y_va):
++        raise ValueError('X/Y rows must match and training/validation must be nonempty')
++    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+     print(f"[data] train x={x_tr.shape}, y={y_tr.shape} | val x={x_va.shape}, y={y_va.shape}")
+ 
+     x_tr_t = torch.from_numpy(x_tr).float().to(device)
+@@ -495,40 +516,23 @@ def main():
+     x_va_t = torch.from_numpy(x_va).float().to(device)
+     y_va_t = torch.from_numpy(y_va).float().to(device)
+ 
+-    marginal = MarginalFlow(
+-        y_dim=y_tr_t.shape[1],
+-        hidden=min(2048, cfg['hidden_mult'] * y_tr_t.shape[1]),
+-        layers=cfg['layers'],
+-        bins=cfg['spline_bins'],
+-        use_actnorm=cfg['use_actnorm'],
+-        use_inv1x1=cfg['use_inv1x1']
+-    ).to(device)
+-
+-    marg_ckpt = torch.load(args.marginal_model, map_location=device)
+-    if isinstance(marg_ckpt, dict):
+-        if 'state_dict' in marg_ckpt:
+-            marginal.load_state_dict(marg_ckpt['state_dict'], strict=False)
+-        elif 'model_state_dict' in marg_ckpt:
+-            marginal.load_state_dict(marg_ckpt['model_state_dict'], strict=False)
+-        else:
+-            marginal.load_state_dict(marg_ckpt, strict=False)
+-    else:
+-        marginal.load_state_dict(marg_ckpt, strict=False)
+-    marginal.eval()
+-
+-    conditional = ConditionalFlow(
+-        y_dim=y_tr_t.shape[1],
+-        x_dim=x_tr_t.shape[1],
+-        hidden=min(2048, cfg['hidden_mult'] * y_tr_t.shape[1]),
+-        layers=cfg['layers'],
+-        bins=cfg['spline_bins'],
+-        use_actnorm=cfg['use_actnorm'],
+-        use_inv1x1=cfg['use_inv1x1'],
+-        dropout=cfg.get('dropout', 0.0),
+-        output_scale=0.1,
+-        adapter_rank=int(cfg.get('adapter_rank', 64)),
+-        adapter_scale=float(cfg.get('adapter_scale', 2e-3)),
+-    ).to(device)
++    marginal, marg_ckpt, backbone = load_flow(
++        args.marginal_model, 'marginal', y_dim=y_tr.shape[1], device=device)
++    signature = target_data_signature(data_dir)
++    if marg_ckpt.get('target_data_signature') != signature:
++        raise ValueError('Marginal checkpoint needs matching target train/validation data; retrain it with this release')
++    # The conditional flow is a context adapter around exactly this backbone.
++    for key in ('layers', 'use_actnorm', 'use_inv1x1'):
++        cfg[key] = backbone[key]
++    cfg['hidden_mult'] = backbone['hidden'] / backbone['y_dim']
++    cfg['spline_bins'] = backbone['bins']
++    cfg['target_data_signature'] = signature
++    cfg['model_kwargs'] = dict(backbone, x_dim=int(x_tr.shape[1]),
++                               dropout=float(cfg.get('dropout', 0.0)), output_scale=0.1,
++                               adapter_rank=int(cfg['adapter_rank']),
++                               adapter_scale=float(cfg['adapter_scale']))
++
++    conditional = ConditionalFlow(**cfg['model_kwargs']).to(device)
+ 
+     copy_shared_weights(marginal, conditional)
+     zero_init_adapter_B_only(conditional)
+diff --git a/scripts/train/train_marginal.py b/scripts/train/train_marginal.py
+index 71e0a5c..6a6778a 100644
+--- a/scripts/train/train_marginal.py
++++ b/scripts/train/train_marginal.py
+@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader, TensorDataset
+ from tqdm import tqdm
+ from flare.flows.marginal import MarginalFlow
+ from flare.utils import EMA, count_params
++from flare.checkpoints import marginal_kwargs, target_data_signature
+ 
+ 
+ class NLLImprovementStopper:
+@@ -66,6 +67,11 @@ def main():
+     Y_train = np.load(os.path.join(args.data_dir, 'Y_train.npy'))
+     Y_val = np.load(os.path.join(args.data_dir, 'Y_val.npy'))
+     y_dim = Y_train.shape[1]
++    if not len(Y_train) or not len(Y_val):
++        raise ValueError('Training and validation splits must both be nonempty')
++    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
++    model_kwargs = marginal_kwargs(cfg, y_dim)
++    signature = target_data_signature(args.data_dir)
+ 
+     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+     
+@@ -73,8 +79,7 @@ def main():
+         torch.cuda.empty_cache()
+         os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+     
+-    model = MarginalFlow(y_dim, hidden=int(min(2048, cfg['hidden_mult']*y_dim)), layers=cfg['layers'], bins=cfg['spline_bins'],
+-                         use_actnorm=cfg['use_actnorm'], use_inv1x1=cfg['use_inv1x1']).to(device)
++    model = MarginalFlow(**model_kwargs).to(device)
+     print(f"Params: {count_params(model)/1e6:.2f}M")
+ 
+     opt = torch.optim.AdamW(model.parameters(), lr=float(cfg['lr']), weight_decay=float(cfg['weight_decay']))
+@@ -98,11 +103,14 @@ def main():
+         scheduler = None
+         print("No learning rate scheduler")
+     
++    # Initialize ActNorm on training data before taking the first EMA snapshot.
++    with torch.no_grad():
++        model.log_prob(torch.from_numpy(Y_train[:max(2, cfg['batch_size'])]).float().to(device))
+     ema = EMA(model, decay=float(cfg['ema_decay']))
+     
+     grad_accum = int(cfg.get('grad_accum_steps', 1))
+ 
+-    train_loader = DataLoader(TensorDataset(torch.from_numpy(Y_train).float()), batch_size=cfg['batch_size'], shuffle=True, drop_last=True)
++    train_loader = DataLoader(TensorDataset(torch.from_numpy(Y_train).float()), batch_size=cfg['batch_size'], shuffle=True, drop_last=False)
+     val_tensor = torch.from_numpy(Y_val).float().to(device)
+ 
+     best = float('inf')
+@@ -150,7 +158,8 @@ def main():
+         
+         if val_nll < best:
+             best = val_nll
+-            torch.save({'state_dict': model.state_dict(), 'cfg': cfg}, args.out)
++            torch.save({'state_dict': model.state_dict(), 'cfg': cfg,
++                        'model_kwargs': model_kwargs, 'target_data_signature': signature}, args.out)
+         
+         if val_nll < best_in_window:
+             best_in_window = val_nll
+@@ -160,7 +169,8 @@ def main():
+             if window_best_state is not None:
+                 current_state = model.state_dict()
+                 model.load_state_dict(window_best_state)
+-                torch.save({'state_dict': model.state_dict(), 'cfg': cfg}, args.out)
++                torch.save({'state_dict': model.state_dict(), 'cfg': cfg,
++                            'model_kwargs': model_kwargs, 'target_data_signature': signature}, args.out)
+                 model.load_state_dict(current_state)
+             print("Processing...")
+             
+diff --git a/tests/test_workflow.py b/tests/test_workflow.py
+new file mode 100644
+index 0000000..9773bca
+--- /dev/null
++++ b/tests/test_workflow.py
+@@ -0,0 +1,79 @@
++import importlib.util
++from pathlib import Path
++import sys
++import tempfile
++import unittest
++
++import numpy as np
++import torch
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT))
++from flare.checkpoints import load_flow, marginal_kwargs, target_data_signature
++from flare.flows.marginal import MarginalFlow
++from flare.flows.conditional import ConditionalFlow
++from flare.utils import EMA
++
++spec = importlib.util.spec_from_file_location('train_conditional', ROOT / 'scripts/train/train_conditional.py')
++training = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(training)
++
++
++class WorkflowTests(unittest.TestCase):
++    def test_fractional_hidden_multiplier_is_an_integer_width(self):
++        kwargs = marginal_kwargs(dict(hidden_mult=.35, layers=1, spline_bins=4), 8)
++        self.assertEqual(kwargs['hidden'], 2)
++        MarginalFlow(**kwargs)
++
++    def test_ema_preserves_permutations_and_boolean_buffers(self):
++        model = MarginalFlow(8, hidden=8, layers=2, bins=4)
++        ema = EMA(model)
++        before = {k: v.clone() for k, v in model.state_dict().items() if not v.is_floating_point()}
++        for _ in range(20):
++            ema.update(model)
++        ema.load_shadow(model)
++        for name, value in before.items():
++            torch.testing.assert_close(model.state_dict()[name], value, rtol=0, atol=0)
++            self.assertEqual(ema.shadow[name].dtype, value.dtype)
++
++    def test_transfer_and_checkpoint_roundtrip(self):
++        torch.manual_seed(42)
++        kwargs = dict(y_dim=8, hidden=12, layers=2, bins=4,
++                      use_actnorm=True, use_inv1x1=False)
++        marginal = MarginalFlow(**kwargs)
++        y, x = torch.randn(16, 8), torch.randn(16, 6)
++        marginal.log_prob(y)
++        conditional_kwargs = dict(kwargs, x_dim=6, dropout=0., output_scale=.1,
++                                  adapter_rank=3, adapter_scale=.004)
++        conditional = ConditionalFlow(**conditional_kwargs)
++        training.copy_shared_weights(marginal, conditional)
++        marginal.eval(); conditional.eval()
++        torch.testing.assert_close(conditional.log_prob(y, x), marginal.log_prob(y), rtol=1e-6, atol=1e-6)
++        with tempfile.TemporaryDirectory() as tmp:
++            path = Path(tmp) / 'cond.pt'
++            torch.save(dict(state_dict=conditional.state_dict(), model_kwargs=conditional_kwargs,
++                            config=dict(layers=99, hidden_mult=.35, spline_bins=4)), path)
++            restored, _, _ = load_flow(path, 'conditional', y_dim=8, x_dim=6)
++            torch.testing.assert_close(restored.log_prob(y, x), conditional.log_prob(y, x))
++            with self.assertRaisesRegex(ValueError, 'dimensions'):
++                load_flow(path, 'conditional', y_dim=8, x_dim=7)
++
++    def test_schedule_and_total_epoch_cap(self):
++        trainer = training.ThreeStageTrainer(dict(stage_epochs=[2, 3, 4], max_epochs=4), torch.device('cpu'))
++        self.assertEqual([s['epochs'] for s in trainer.stages], [2, 2])
++        self.assertFalse(trainer.amp)
++        with self.assertRaises(ValueError):
++            training.ThreeStageTrainer(dict(stage_epochs=[0, 0, 0]), torch.device('cpu'))
++
++    def test_signature_detects_target_row_order_changes(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            p = Path(tmp)
++            np.save(p / 'Y_train.npy', np.arange(24).reshape(4, 6))
++            np.save(p / 'Y_val.npy', np.arange(12).reshape(2, 6))
++            before = target_data_signature(p)
++            np.save(p / 'Y_val.npy', np.arange(12).reshape(2, 6)[::-1])
++            self.assertNotEqual(before, target_data_signature(p))
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git "a/\344\277\256\345\244\215\344\270\216\351\252\214\350\257\201\350\257\264\346\230\216.txt" "b/\344\277\256\345\244\215\344\270\216\351\252\214\350\257\201\350\257\264\346\230\216.txt"
+new file mode 100644
+index 0000000..6ec1d46
+--- /dev/null
++++ "b/\344\277\256\345\244\215\344\270\216\351\252\214\350\257\201\350\257\264\346\230\216.txt"
+@@ -0,0 +1,34 @@
++FLARE 衔接修复与验证（2026-11-03）
++
++修复基于 2026-05-11 的 flare-release，提交 b49944e66892e11d24f81059fc1a87b70c3c45b8。
++此目录是可单独使用的修复版；原始精简备份包与服务器原始代码保持不变。
++
++修复内容
++- 条件训练按边际检查点保存的真实结构加载，继承相同骨干，严格检查状态复制和初始化密度一致性。
++- 新增 export_per_example_nll.py，连接训练权重与最终 FLARE 评分需要的逐样本 NLL。
++- 保存架构及目标数据指纹，避免不同数据划分/顺序/变换混用；MI bounds 共用同一加载接口。
++- 三阶段轮数与总训练轮数可以配置；默认保持原代码实际执行的 60/60/220。
++- 修复 EMA 对排列索引等非参数状态做平均的问题；小数据不再因 batch_size 较大而被整批丢弃。
++- 明确当前预处理只做 StandardScaler，不做 PCA；旧 PCA 参数不是启用 PCA 的开关。
++- 添加完整流水线 run_flow_pipeline.py、可重复运行的小规模验证脚本及 Python 3.10 依赖版本记录。
++
++实际验证结果
++1. 五项回归检查通过：整数网络宽度、EMA 状态、骨干复制/检查点加载、轮数预算、数据顺序检测。
++2. 64 个合成样本、8/6 维向量：两个边际流、两个方向的条件流、测试 NLL 导出及最终评分通过。
++3. 64 条真实文本：用 MiniLM 的 mean/CLS 两种池化生成 384 维向量，再完成上述全流程；每方向 13 个测试样本。
++4. 故意调换目标验证样本顺序，NLL 导出正确拒绝；按导出 NLL 重算分数与程序输出一致。
++5. MI bounds 入口检查、editable 安装及 pip check 均通过。
++6. 最终配置修改后再次执行回归检查与真实文本全流程，均通过。
++
++测试均通过 CUDA_VISIBLE_DEVICES='' 隐藏全部 GPU，使用 CPU。没有启动完整论文实验。
++真实文本检查是同一 MiniLM 模型的两种池化变体；不表示已重跑论文全部八个 embedding 模型、完整数据集或基线。
++Python 3.10 测试环境继承了现有环境中的依赖；没有全新下载并安装所有锁定依赖。
++详细记录见 validation/；版本见 requirements-repro.txt 与 environment_tested.json。
++
++复现入口
++安装依赖后，以 embeddings.json 记录各模型向量的路径，运行：
++python scripts/run_flow_pipeline.py --embeddings embeddings.json --output-dir data/example
++具体示例和测试命令见 REPRODUCE.md、README.md。
++
++流程复现无需备份旧模型权重。此修复包也不包含 smoke 检查产生的训练权重或 Python 环境目录。
++原始数据、公开 embedding 模型仍需重新获取；本包不提供离线镜像，也不承诺原论文数值或参数完全相同。

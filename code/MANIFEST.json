@@ -1,0 +1,308 @@
+{
+  "created": "2026-11-03",
+  "base_commit": "b49944e66892e11d24f81059fc1a87b70c3c45b8",
+  "tested_source_files_compared": 40,
+  "model_weights_included": false,
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 258,
+      "sha256": "5a11e4d06bbf4146423e78721e9a3928d9e32d20b57dea780fc64734a5154274"
+    },
+    {
+      "path": "environment_tested.json",
+      "bytes": 889,
+      "sha256": "41b247ab5528136b2254a0086db09ba55b8230a1df805f6e80705192f888584b"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1070,
+      "sha256": "d2b3c719e26c14cbf64a41d9d9bfb677fc22ef5cb4a43ee1147174a89ee50c3b"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 335,
+      "sha256": "603eb46194da303e31efcd84806c81231a376f22b14c8d4c96f037d46c3730d1"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4493,
+      "sha256": "ddfe74e5e31669e17bda2e327ea3f1bcc576db764a14dbaf4706709c73beb117"
+    },
+    {
+      "path": "REPRODUCE.md",
+      "bytes": 5067,
+      "sha256": "81e7c141a1b76ab4f43f89003878eca4eaccab4e9081f43d3b384ece4b44e66b"
+    },
+    {
+      "path": "requirements-repro.txt",
+      "bytes": 475,
+      "sha256": "e5b0beafba1a2e1d8e4bfaa3a3e7d1de110a0e702cb7dfd8d459a350586bef67"
+    },
+    {
+      "path": "requirements.txt",
+      "bytes": 206,
+      "sha256": "075ac783841c58df13af950e79f7d3be08bc69d33c46a7340d14aed4e9eee4db"
+    },
+    {
+      "path": "修复与验证说明.txt",
+      "bytes": 2744,
+      "sha256": "e9ece993a8acb18e41a6a51578aade6af80bc86af0fdd244018e56ad101b7c2a"
+    },
+    {
+      "path": "validation/before_fix_error.txt",
+      "bytes": 2146,
+      "sha256": "062f444c79a3ae457b47c6861bc5617f76bca305a1223e29d1a0c7e27d5298ce"
+    },
+    {
+      "path": "validation/mi_bounds.log",
+      "bytes": 1917,
+      "sha256": "ee2f3d064c8781eaed5e98d7bd27126d07b3a8ce8ba2020f7704f3fc7819b3d5"
+    },
+    {
+      "path": "validation/package_install.log",
+      "bytes": 1189,
+      "sha256": "105fab1d4f9b0ebdcfd2a8adf0ce0c9901dd8f2dcc156fef449084cdad7b391a"
+    },
+    {
+      "path": "validation/pip_check.log",
+      "bytes": 30,
+      "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09"
+    },
+    {
+      "path": "validation/smoke_embeddings_final.log",
+      "bytes": 17056,
+      "sha256": "bee3c0ecae94286bf7b109f2a22781457634824bc763b360ced26b9e22424a53"
+    },
+    {
+      "path": "validation/smoke_embeddings_result.json",
+      "bytes": 213,
+      "sha256": "a5d779397bc3fdb44638414669f198d8f7c62a165a453fb8f3ad245720e5d28b"
+    },
+    {
+      "path": "validation/smoke_embeddings_scores.json",
+      "bytes": 1103,
+      "sha256": "f64df4874470beff4fc9f71e53fd0ce7806ddd0d686486602269329259911a54"
+    },
+    {
+      "path": "validation/smoke_synthetic.log",
+      "bytes": 15346,
+      "sha256": "3c2f56984e1e232b5fa803647b0e6a688277fbb84279dfb6aa1c722f4cdb22e1"
+    },
+    {
+      "path": "validation/smoke_synthetic_result.json",
+      "bytes": 206,
+      "sha256": "45f7d25180352225cfe73d75891648e6293bb4f83e5a9c7cb738e5893d2688b6"
+    },
+    {
+      "path": "validation/SUMMARY.json",
+      "bytes": 534,
+      "sha256": "37b82890a9c1b384d7b75a03a82ba7418a7bdc7ca61fd72d72338254be9d348e"
+    },
+    {
+      "path": "validation/unit_tests.log",
+      "bytes": 777,
+      "sha256": "033234382deeb9a12baeb04f8604e7ed802d89374a7ed3c84f54f1a502051f53"
+    },
+    {
+      "path": "tests/test_workflow.py",
+      "bytes": 3654,
+      "sha256": "047b1036bbf3ead673f1a6b1343635924b3261f4fe20bf4ad2ed6fa9f0cd0730"
+    },
+    {
+      "path": "scripts/generate_embeddings.py",
+      "bytes": 17779,
+      "sha256": "baa6848ed5095977e7621e23e15d4ce44a70244c14484dd7db013d1ba8cd0957"
+    },
+    {
+      "path": "scripts/run_flow_pipeline.py",
+      "bytes": 5073,
+      "sha256": "0286c21ab1957491fb44b8b32fc9b408532767179e7debd51e31d67623c50e79"
+    },
+    {
+      "path": "scripts/smoke_workflow.py",
+      "bytes": 4663,
+      "sha256": "19ce28ba2c00f3618bdaf958f4ceb530e96f11afc02ddf802d253a2544945fc1"
+    },
+    {
+      "path": "scripts/train/train_conditional.py",
+      "bytes": 23191,
+      "sha256": "2acf0e98cd12f0f3646c7dc6db2c528d4ee8a567e459b4da230718ee0e0172b2"
+    },
+    {
+      "path": "scripts/train/train_marginal.py",
+      "bytes": 7272,
+      "sha256": "b94f158828ffbc05725832f815f3492f50815302b63d8596c1c273d72cf7727e"
+    },
+    {
+      "path": "scripts/score/compute_flare_is.py",
+      "bytes": 6189,
+      "sha256": "5f4912a6775d1d17b2a03d07239e01e5be13ae105651443b6d52d37033d3c604"
+    },
+    {
+      "path": "scripts/score/compute_mi_bounds.py",
+      "bytes": 17694,
+      "sha256": "494400544bbb8c096971bee590267603e05e37d3b7b4023f7f51fef2c61bf431"
+    },
+    {
+      "path": "scripts/score/export_per_example_nll.py",
+      "bytes": 3593,
+      "sha256": "0deb67b5b9733b567ca11c35d2e39a32ac2205652bc9b0b83c21ffbd1286ec81"
+    },
+    {
+      "path": "scripts/prepare/prepare_data.py",
+      "bytes": 5965,
+      "sha256": "fe3fae916ee873d1c41dae15475742309e5d60aa1361f7457fbdf2151ab36f49"
+    },
+    {
+      "path": "scripts/baselines/compute_embedding_metrics.py",
+      "bytes": 4618,
+      "sha256": "b51ef8d3875ded9547527277ed913fec5de41465714e7dc74ff127b9d24724c5"
+    },
+    {
+      "path": "scripts/baselines/compute_emir_knife.py",
+      "bytes": 7267,
+      "sha256": "4e886e0f475751007126992e65dc5fadd6c486a73c1e4da0fbbdf33acae18be5"
+    },
+    {
+      "path": "scripts/baselines/emir/pyproject.toml",
+      "bytes": 395,
+      "sha256": "1e327db49968b3ec735dae9d5574480806be979a334984212c8a1cc411d29813"
+    },
+    {
+      "path": "scripts/baselines/emir/Readme.md",
+      "bytes": 540,
+      "sha256": "9edcbb2d02a7e9e6405c11a076497e94c898b1bd3b080545762dd14effc3f78e"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/embedder_evaluator.py",
+      "bytes": 4220,
+      "sha256": "6f87c3a3ceb76871aabd2643b0353c58fba4c152369983a88346576c2c2c6b5b"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/Readme.md",
+      "bytes": 657,
+      "sha256": "e215702f7bf0fd5278dc88e1493cc0a5976ea2be72e77967d6f594d1fee93053"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/__init__.py",
+      "bytes": 63,
+      "sha256": "d2e9c40b7c854cef0fe8a56178b5e20eec00aeccd5a8868ffde0ad6b3255898b"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/ftensordataloader.py",
+      "bytes": 1688,
+      "sha256": "1a39bf4fb4b71bfcfbccbf8f06662a274f4a63708c3df426cadf896916080eb7"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/knife.py",
+      "bytes": 2151,
+      "sha256": "19efc21a050d3d165b19aadf69517cb276d0ba359a109ea0cabeab60aa201aba"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/knife_estimator.py",
+      "bytes": 9998,
+      "sha256": "d4905db0b68b270fc034db64331f6da836f52e8977d6f7d3170a1706134b602f"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/__init__.py",
+      "bytes": 55,
+      "sha256": "32832cf3040afbc2b35bce5a13ca698732f7fc6274058c1bd01d5dca2477ddc4"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/kernels/discrete_kernels.py",
+      "bytes": 2948,
+      "sha256": "fe992af670230a3c937cd124edbae24428d35f6537cefca02e854fccf5403a28"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/kernels/feed_forward.py",
+      "bytes": 2136,
+      "sha256": "bbca73f1e4fe6d96e334f7affb311f5e48b6e7adb6df1fb62f11ac9ca2e72d77"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/kernels/gaussian_kernel.py",
+      "bytes": 4371,
+      "sha256": "b905105e8a380d8462a7839c80e942503f8c257efde8beaba13c7465cf2bc8e0"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/kernels/kernels.py",
+      "bytes": 941,
+      "sha256": "346b85eb4a68fac52f982d81fdee67a9eac4a03f7bbad72a7cf62229b5246c11"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/kernels/tanimoto_kernels.py",
+      "bytes": 4032,
+      "sha256": "db4066f9bc39bf080d3b864aa7cb358476cdf28049291762005c36d7f2fe641b"
+    },
+    {
+      "path": "scripts/baselines/emir/emir/estimators/kernels/__init__.py",
+      "bytes": 696,
+      "sha256": "0a06d850b1e169b764efa373b73180f815d5224cc900ced399a8ba92a7b2bd1a"
+    },
+    {
+      "path": "flare/checkpoints.py",
+      "bytes": 2339,
+      "sha256": "9563c03e3c3724d5f4f45eca748835e6a6d8eed42f0997071d52c005e46a2ce6"
+    },
+    {
+      "path": "flare/preprocess.py",
+      "bytes": 1124,
+      "sha256": "5d04d82769112b97694f40671b432169284eb610b7ab067ea26241304611f394"
+    },
+    {
+      "path": "flare/utils.py",
+      "bytes": 940,
+      "sha256": "1a6bc1cb5b1fe70dbcbf59d9de3fdd44c29093adb4a6487cab80985c5eca1798"
+    },
+    {
+      "path": "flare/__init__.py",
+      "bytes": 49,
+      "sha256": "a78da30b498c08c476568a97d439c40814e8fd1f0af19712f98f5be6d85b4c6f"
+    },
+    {
+      "path": "flare/flows/conditional.py",
+      "bytes": 5828,
+      "sha256": "f1461b4788f44d47a649aec2bfec20ccc736478e87680f80cfd168e487544005"
+    },
+    {
+      "path": "flare/flows/layers.py",
+      "bytes": 8699,
+      "sha256": "9ec4c1cf335b7fa902b2cd42a43912238e851902c35784d4f04b55791432a10f"
+    },
+    {
+      "path": "flare/flows/marginal.py",
+      "bytes": 523,
+      "sha256": "6ce4e93e91ef1e3f8702c835ee646e63d7104ce5a8d968c7fb37efce50d676dc"
+    },
+    {
+      "path": "flare/flows/__init__.py",
+      "bytes": 76,
+      "sha256": "672b6002bb1488e807da6f25b50ee3e1963b67367b1e64dee5a380dc7ce82fda"
+    },
+    {
+      "path": "configs/conditional.yaml",
+      "bytes": 384,
+      "sha256": "4649c1e4b6ffdbc14f2bec21df637094070b8d288427e72fa56701d1941a1395"
+    },
+    {
+      "path": "configs/conditional_25000.yaml",
+      "bytes": 439,
+      "sha256": "4add37e547dba0682c9e403309abbc4fe8c3f25c66ee1804d525434ea874b3eb"
+    },
+    {
+      "path": "configs/marginal.yaml",
+      "bytes": 255,
+      "sha256": "b0d09083e0fc1ce92a694366a52c12541640a2fb9efed646ee24f354a8bc610f"
+    },
+    {
+      "path": "configs/marginal_25000.yaml",
+      "bytes": 435,
+      "sha256": "7ecb4dfe274cb61d355c88ea3067e343b12377ccdc19e066f7db9189a6a5eb74"
+    },
+    {
+      "path": "configs/model_dims.json",
+      "bytes": 243,
+      "sha256": "d4d63d6b3da40811157cbd23ee988e6a4d4f66b69826a7a6646b2aa8edf745d6"
+    }
+  ]
+}

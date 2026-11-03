@@ -1,0 +1,16 @@
+model: NSF
+layers: 6
+hidden_mult: 2
+spline_bins: 8
+use_actnorm: true
+use_inv1x1: false
+optimizer: AdamW
+lr: 0.001
+weight_decay: 1e-5
+batch_size: 128
+grad_accum_steps: 1
+ema_decay: 0.999
+early_stop_patience: 10
+pca_keep_var: 0.98
+seed: 42
+max_epochs: 2000

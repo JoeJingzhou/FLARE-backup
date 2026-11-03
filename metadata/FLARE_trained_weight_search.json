@@ -1,0 +1,28 @@
+{
+  "search_roots": [
+    "/raid/jjiang105",
+    "/home/jjiang105"
+  ],
+  "pruned_directories": [
+    ".cache",
+    ".git",
+    ".venv",
+    ".venv-alfworld",
+    ".venv-insight",
+    "__pycache__",
+    "anaconda3",
+    "atu-deps",
+    "conda-envs",
+    "env",
+    "envs",
+    "miniconda3",
+    "models",
+    "nltk_data",
+    "node_modules",
+    "pip-cache",
+    "pipcache",
+    "site-packages",
+    "venv"
+  ],
+  "existing_flow_weight_candidates": []
+}

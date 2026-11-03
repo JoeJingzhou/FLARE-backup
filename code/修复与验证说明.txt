@@ -1,0 +1,34 @@
+FLARE 衔接修复与验证（2026-11-03）
+
+修复基于 2026-05-11 的 flare-release，提交 b49944e66892e11d24f81059fc1a87b70c3c45b8。
+此目录是可单独使用的修复版；原始精简备份包与服务器原始代码保持不变。
+
+修复内容
+- 条件训练按边际检查点保存的真实结构加载，继承相同骨干，严格检查状态复制和初始化密度一致性。
+- 新增 export_per_example_nll.py，连接训练权重与最终 FLARE 评分需要的逐样本 NLL。
+- 保存架构及目标数据指纹，避免不同数据划分/顺序/变换混用；MI bounds 共用同一加载接口。
+- 三阶段轮数与总训练轮数可以配置；默认保持原代码实际执行的 60/60/220。
+- 修复 EMA 对排列索引等非参数状态做平均的问题；小数据不再因 batch_size 较大而被整批丢弃。
+- 明确当前预处理只做 StandardScaler，不做 PCA；旧 PCA 参数不是启用 PCA 的开关。
+- 添加完整流水线 run_flow_pipeline.py、可重复运行的小规模验证脚本及 Python 3.10 依赖版本记录。
+
+实际验证结果
+1. 五项回归检查通过：整数网络宽度、EMA 状态、骨干复制/检查点加载、轮数预算、数据顺序检测。
+2. 64 个合成样本、8/6 维向量：两个边际流、两个方向的条件流、测试 NLL 导出及最终评分通过。
+3. 64 条真实文本：用 MiniLM 的 mean/CLS 两种池化生成 384 维向量，再完成上述全流程；每方向 13 个测试样本。
+4. 故意调换目标验证样本顺序，NLL 导出正确拒绝；按导出 NLL 重算分数与程序输出一致。
+5. MI bounds 入口检查、editable 安装及 pip check 均通过。
+6. 最终配置修改后再次执行回归检查与真实文本全流程，均通过。
+
+测试均通过 CUDA_VISIBLE_DEVICES='' 隐藏全部 GPU，使用 CPU。没有启动完整论文实验。
+真实文本检查是同一 MiniLM 模型的两种池化变体；不表示已重跑论文全部八个 embedding 模型、完整数据集或基线。
+Python 3.10 测试环境继承了现有环境中的依赖；没有全新下载并安装所有锁定依赖。
+详细记录见 validation/；版本见 requirements-repro.txt 与 environment_tested.json。
+
+复现入口
+安装依赖后，以 embeddings.json 记录各模型向量的路径，运行：
+python scripts/run_flow_pipeline.py --embeddings embeddings.json --output-dir data/example
+具体示例和测试命令见 REPRODUCE.md、README.md。
+
+流程复现无需备份旧模型权重。此修复包也不包含 smoke 检查产生的训练权重或 Python 环境目录。
+原始数据、公开 embedding 模型仍需重新获取；本包不提供离线镜像，也不承诺原论文数值或参数完全相同。

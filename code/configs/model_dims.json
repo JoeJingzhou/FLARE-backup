@@ -1,0 +1,10 @@
+{
+  "bge_multilingual_gemma2": 3584,
+  "Zeta_Alpha_E5_Mistral": 4096,
+  "GritLM_7B": 4096,
+  "SFR_Embedding_Mistral": 4096,
+  "Linq_Embed_Mistral": 4096,
+  "gte_Qwen2_7B_instruct": 3584,
+  "stella_base_en_v2": 768,
+  "all_MiniLM_L6_v2": 384
+}
